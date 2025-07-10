@@ -41,7 +41,7 @@ export default function DashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
-            <div className="flex items-center">
+            <div className="flex flex-wrap items-center">
               <div className="bg-green-100 p-3 rounded-lg">
                 <DollarSign className="h-6 w-6 text-green-600" />
               </div>
@@ -53,7 +53,7 @@ export default function DashboardPage() {
           </Card>
 
           <Card>
-            <div className="flex items-center">
+            <div className="flex flex-wrap items-center">
               <div className="bg-blue-100 p-3 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
@@ -65,7 +65,7 @@ export default function DashboardPage() {
           </Card>
 
           <Card>
-            <div className="flex items-center">
+            <div className="flex flex-wrap items-center">
               <div className="bg-red-100 p-3 rounded-lg">
                 <TrendingDown className="h-6 w-6 text-red-600" />
               </div>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
           </Card>
 
           <Card>
-            <div className="flex items-center">
+            <div className="flex flex-wrap items-center">
               <div className="bg-purple-100 p-3 rounded-lg">
                 <Activity className="h-6 w-6 text-purple-600" />
               </div>
@@ -131,7 +131,7 @@ export default function DashboardPage() {
           <Card title="Portfolio Allocation" subtitle="Your current holdings">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
                   <span className="text-sm font-medium">Technology</span>
                 </div>
@@ -139,7 +139,7 @@ export default function DashboardPage() {
               </div>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
                   <span className="text-sm font-medium">Healthcare</span>
                 </div>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
               </div>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
                   <span className="text-sm font-medium">Finance</span>
                 </div>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
               </div>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
                   <span className="text-sm font-medium">Energy</span>
                 </div>

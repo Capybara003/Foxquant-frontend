@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button'
 import { DollarSign, TrendingUp, PieChart } from 'lucide-react'
 import { portfolioAPI } from '@/services/api'
 import { Line } from 'react-chartjs-2';
+import 'chartjs-adapter-date-fns';
 import {
   Chart as ChartJS,
   LineElement,
@@ -19,7 +20,6 @@ import {
   Legend,
   CategoryScale,
 } from 'chart.js';
-import 'chartjs-adapter-date-fns';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { marketAPI } from '@/services/api';
 
@@ -199,7 +199,7 @@ export default function PortfolioPage() {
         {/* Portfolio Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
-            <div className="flex items-center">
+            <div className="flex items-center justify-center flex-wrap w-full">
               <div className="bg-green-100 p-3 rounded-lg">
                 <DollarSign className="h-6 w-6 text-green-600" />
               </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { notificationsAPI } from "@/services/api";
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -10,9 +10,10 @@ export function useNotifications() {
     setLoading(true);
     try {
       const data = await notificationsAPI.list();
-      setNotifications(data);
+      setNotifications(Array.isArray(data) ? data : []);
     } catch (err) {
       setError("Failed to fetch notifications");
+      setNotifications([]); // Ensure notifications is always an array on error
     } finally {
       setLoading(false);
     }
@@ -27,12 +28,12 @@ export function useNotifications() {
 
   const markAsRead = async (id: number) => {
     await notificationsAPI.markAsRead(id);
-    setNotifications(n => n.map(notif => notif.id === id ? { ...notif, read: true } : notif));
+    setNotifications((n: any) => n.map((notif: any) => notif.id === id ? { ...notif, read: true } : notif));
   };
 
   const deleteNotification = async (id: number) => {
     await notificationsAPI.delete(id);
-    setNotifications(n => n.filter(notif => notif.id !== id));
+    setNotifications(n => n.filter((notif: any) => notif.id !== id));
   };
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function useNotifications() {
     return () => clearInterval(interval);
   }, [fetchNotifications, pollNotifications]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
 
   return { notifications, unreadCount, loading, error, markAsRead, deleteNotification, pollNotifications };
 } 

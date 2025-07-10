@@ -147,13 +147,13 @@ export const historyAPI = {
 
 export const marketAPI = {
   getQuote: async (symbol: string) => {
-    const response = await fetch(`${API_BASE_URL}/market/quote/${symbol}`, {
+    const response = await fetch(`${API_BASE_URL}/portfolio/market/quote/${symbol}`, {
       headers: getAuthHeaders(),
     });
     return response.json();
   },
   getBars: async (symbol: string, params?: { timeframe?: string; start?: string; end?: string; limit?: string }) => {
-    const url = new URL(`${API_BASE_URL}/market/bars/${symbol}`);
+    const url = new URL(`${API_BASE_URL}/portfolio/market/bars/${symbol}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value) url.searchParams.append(key, value);

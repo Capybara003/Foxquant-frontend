@@ -1,3 +1,4 @@
+'use client'
 import { useNotifications } from "@/hooks/useNotifications";
 import Button from "./Button";
 import { useState, useRef, useEffect } from "react";
