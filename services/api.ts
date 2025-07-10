@@ -70,6 +70,24 @@ export const portfolioAPI = {
     })
     return response.json()
   },
+  getPositions: async () => {
+    const response = await fetch(`${API_BASE_URL}/portfolio/positions`, {
+      headers: getAuthHeaders(),
+    })
+    return response.json()
+  },
+  getPortfolioHistory: async (params?: { period?: string; timeframe?: string }) => {
+    const url = new URL(`${API_BASE_URL}/portfolio/history`);
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) url.searchParams.append(key, value);
+      });
+    }
+    const response = await fetch(url.toString(), {
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
 }
 
 // Orders API functions
@@ -84,12 +102,22 @@ export const ordersAPI = {
   createOrder: async (orderData: {
     symbol: string
     qty: number
-    type: 'Buy' | 'Sell'
+    side: 'buy' | 'sell'
+    type: 'market' | 'limit' | 'stop' | 'stop_limit'
+    time_in_force: 'day' | 'gtc' | 'opg' | 'cls' | 'ioc' | 'fok'
   }) => {
     const response = await fetch(`${API_BASE_URL}/orders`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(orderData),
+    })
+    return response.json()
+  },
+
+  cancelOrder: async (orderId: string) => {
+    const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
     })
     return response.json()
   },
@@ -103,4 +131,85 @@ export const historyAPI = {
     })
     return response.json()
   },
-} 
+  getTradeHistory: async (params?: { activity_type?: string; start?: string; end?: string }) => {
+    const url = new URL(`${API_BASE_URL}/history/activities`);
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) url.searchParams.append(key, value);
+      });
+    }
+    const response = await fetch(url.toString(), {
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+}
+
+export const marketAPI = {
+  getQuote: async (symbol: string) => {
+    const response = await fetch(`${API_BASE_URL}/market/quote/${symbol}`, {
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+  getBars: async (symbol: string, params?: { timeframe?: string; start?: string; end?: string; limit?: string }) => {
+    const url = new URL(`${API_BASE_URL}/market/bars/${symbol}`);
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) url.searchParams.append(key, value);
+      });
+    }
+    const response = await fetch(url.toString(), {
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+}
+
+export const accountAPI = {
+  updateAlpacaKeys: async (alpacaPaperApiKey: string, alpacaPaperSecretKey: string, alpacaLiveApiKey: string, alpacaLiveSecretKey: string, alpacaEnv: 'paper' | 'live') => {
+    const response = await fetch(`${API_BASE_URL}/auth/alpaca-keys`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ alpacaPaperApiKey, alpacaPaperSecretKey, alpacaLiveApiKey, alpacaLiveSecretKey, alpacaEnv }),
+    });
+    return response.json();
+  },
+  removeAlpacaKeys: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/alpaca-keys`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+}
+
+export const notificationsAPI = {
+  list: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications`, {
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+  markAsRead: async (id: number) => {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+  delete: async (id: number) => {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+  poll: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications/poll`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+}; 

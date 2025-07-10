@@ -2,26 +2,38 @@
 
 import { useAuthLogic } from '@/hooks/useAuthLogic'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import { Calendar, TrendingUp, TrendingDown } from 'lucide-react'
 import { historyAPI } from '@/services/api'
 
-interface HistoryItem {
-  id: string
-  symbol: string
-  qty: number
-  type: string
-  status: string
-  createdAt: string
+interface ActivityItem {
+  id: string;
+  activity_type: string;
+  symbol?: string;
+  qty?: string;
+  price?: string;
+  side?: string;
+  date: string;
+  status?: string;
+  description?: string;
+  net_amount?: string;
 }
 
 export default function HistoryPage() {
   const { user, isLoading } = useAuthLogic()
   const router = useRouter()
-  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [activityType, setActivityType] = useState<string>('')
+  const [symbolFilter, setSymbolFilter] = useState<string>('')
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const pageSize = 50
+  const isFirstLoad = useRef(true)
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -30,24 +42,27 @@ export default function HistoryPage() {
   }, [user, isLoading, router])
 
   useEffect(() => {
-    const fetchHistory = async () => {
+    if (!user) return
+    const fetchActivities = async () => {
+      setLoading(true)
       try {
-        const response = await historyAPI.getHistory();
-        if (response.ok) {
-          const data = await response.json()
-          setHistory(data)
+        const params: any = { activity_type: activityType || undefined, start: startDate || undefined, end: endDate || undefined }
+        const data = await historyAPI.getTradeHistory(params)
+        let filtered = data
+        if (symbolFilter) {
+          filtered = filtered.filter((item: any) => item.symbol?.toLowerCase().includes(symbolFilter.toLowerCase()))
         }
+        setActivities(filtered.slice(0, page * pageSize))
+        setHasMore(filtered.length > page * pageSize)
       } catch (error) {
-        console.error('Failed to fetch history:', error)
+        console.error('Failed to fetch activities:', error)
       } finally {
         setLoading(false)
+        isFirstLoad.current = false
       }
     }
-
-    if (user) {
-      fetchHistory()
-    }
-  }, [user])
+    fetchActivities()
+  }, [user, activityType, symbolFilter, startDate, endDate, page])
 
   if (isLoading || loading) {
     return (
@@ -74,76 +89,94 @@ export default function HistoryPage() {
           </div>
         </div>
 
+        {/* Filters */}
+        <Card>
+          <div className="flex flex-wrap gap-4 items-end mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Activity Type</label>
+              <select value={activityType} onChange={e => { setPage(1); setActivityType(e.target.value) }} className="mt-1 block border-gray-300 rounded-md">
+                <option value="">All</option>
+                <option value="FILL">Fill</option>
+                <option value="DIV">Dividend</option>
+                <option value="TRANS">Transfer</option>
+                <option value="JNLC">Journal</option>
+                <option value="CFEE">Fee</option>
+                <option value="ACATC">ACAT Credit</option>
+                <option value="ACATS">ACAT Debit</option>
+                <option value="CSD">Cash Disbursement</option>
+                <option value="CSW">Cash Withdrawal</option>
+                <option value="INT">Interest</option>
+                <option value="WIRE">Wire</option>
+                <option value="REORG">Reorg</option>
+                <option value="SPIN">Spin-off</option>
+                <option value="MERGER">Merger</option>
+                <option value="SPLIT">Split</option>
+                <option value="SUB">Subscription</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Symbol</label>
+              <input type="text" value={symbolFilter} onChange={e => { setPage(1); setSymbolFilter(e.target.value) }} className="mt-1 block border-gray-300 rounded-md" placeholder="AAPL" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Start Date</label>
+              <input type="date" value={startDate} onChange={e => { setPage(1); setStartDate(e.target.value) }} className="mt-1 block border-gray-300 rounded-md" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">End Date</label>
+              <input type="date" value={endDate} onChange={e => { setPage(1); setEndDate(e.target.value) }} className="mt-1 block border-gray-300 rounded-md" />
+            </div>
+          </div>
+        </Card>
+
         {/* History Table */}
-        <Card title="Trade History" subtitle="Your completed trades">
+        <Card title="Trade Activity History" subtitle="All account activities from Alpaca">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Symbol
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbol</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Side</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {history.length === 0 ? (
+                {loading ? (
+                  <tr><td colSpan={8} className="text-center py-6">Loading...</td></tr>
+                ) : activities.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                      No trading history found
-                    </td>
+                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">No activity history found</td>
                   </tr>
                 ) : (
-                  history.map((item) => (
+                  activities.map((item) => (
                     <tr key={item.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {item.symbol}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {item.type.toLowerCase() === 'buy' ? (
-                            <TrendingUp className="h-4 w-4 text-green-500 mr-2" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4 text-red-500 mr-2" />
-                          )}
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${item.type.toLowerCase() === 'buy'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                            }`}>
-                            {item.type}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.qty}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                          {item.status}
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${item.activity_type === 'FILL' ? 'bg-green-100 text-green-800' : item.activity_type === 'DIV' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {item.activity_type}
                         </span>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.symbol || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.side || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.qty || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.price ? `$${Number(item.price).toFixed(2)}` : '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.status || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description || '-'}</td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+            {hasMore && !loading && (
+              <div className="flex justify-center mt-4">
+                <button className="px-4 py-2 rounded bg-primary-600 text-white" onClick={() => setPage(page + 1)}>Load More</button>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -152,7 +185,7 @@ export default function HistoryPage() {
           <Card>
             <div className="text-center">
               <p className="text-sm font-medium text-gray-600">Total Trades</p>
-              <p className="text-2xl font-bold text-gray-900">{history.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{activities.length}</p>
             </div>
           </Card>
 
@@ -160,7 +193,7 @@ export default function HistoryPage() {
             <div className="text-center">
               <p className="text-sm font-medium text-gray-600">Buy Orders</p>
               <p className="text-2xl font-bold text-green-600">
-                {history.filter(item => item.type.toLowerCase() === 'buy').length}
+                {activities.filter(item => item.side?.toLowerCase() === 'buy').length}
               </p>
             </div>
           </Card>
@@ -169,7 +202,7 @@ export default function HistoryPage() {
             <div className="text-center">
               <p className="text-sm font-medium text-gray-600">Sell Orders</p>
               <p className="text-2xl font-bold text-red-600">
-                {history.filter(item => item.type.toLowerCase() === 'sell').length}
+                {activities.filter(item => item.side?.toLowerCase() === 'sell').length}
               </p>
             </div>
           </Card>

@@ -23,6 +23,9 @@ export default function OrdersPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [canceling, setCanceling] = useState<string | null>(null)
+  const [cancelError, setCancelError] = useState("")
+  const [cancelSuccess, setCancelSuccess] = useState("")
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -49,6 +52,26 @@ export default function OrdersPage() {
       fetchOrders()
     }
   }, [user])
+
+  const handleCancel = async (orderId: string) => {
+    setCanceling(orderId)
+    setCancelError("")
+    setCancelSuccess("")
+    try {
+      const res = await ordersAPI.cancelOrder(orderId)
+      if (res.success) {
+        setOrders((prev) => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o))
+        setCancelSuccess("Order cancelled successfully.")
+      } else {
+        setCancelError(res.error || "Failed to cancel order")
+      }
+    } catch (err: any) {
+      setCancelError(err.message || "Failed to cancel order")
+    } finally {
+      setCanceling(null)
+      setTimeout(() => { setCancelSuccess(""); setCancelError(""); }, 2000)
+    }
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -176,16 +199,18 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {order.status.toLowerCase() === 'open' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              // Handle cancel order
-                              console.log('Cancel order:', order.id)
-                            }}
-                          >
-                            Cancel
-                          </Button>
+                          <>
+                            {cancelError && <div className="text-red-600 text-sm mb-2">{cancelError}</div>}
+                            {cancelSuccess && <div className="text-green-600 text-sm mb-2">{cancelSuccess}</div>}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCancel(order.id)}
+                              disabled={canceling === order.id}
+                            >
+                              {canceling === order.id ? 'Cancelling...' : 'Cancel'}
+                            </Button>
+                          </>
                         )}
                       </td>
                     </tr>
