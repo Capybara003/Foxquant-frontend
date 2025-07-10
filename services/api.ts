@@ -29,11 +29,11 @@ export const authAPI = {
     toast.success('Login successful!')
   },
 
-  register: async (name: string, email: string, password: string) => {
+  register: async (name: string, email: string, password: string, alpacaApiKey: string, alpacaSecretKey: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, alpacaApiKey, alpacaSecretKey }),
     })
     return response.json()
   },

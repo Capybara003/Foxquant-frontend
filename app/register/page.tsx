@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [alpacaApiKey, setAlpacaApiKey] = useState('')
+  const [alpacaSecretKey, setAlpacaSecretKey] = useState('')
 
   const router = useRouter()
 
@@ -45,6 +47,13 @@ export default function RegisterPage() {
       newErrors.confirmPassword = 'Passwords do not match'
     }
 
+    if (!alpacaApiKey) {
+      newErrors.alpacaApiKey = 'Alpaca API Key is required'
+    }
+    if (!alpacaSecretKey) {
+      newErrors.alpacaSecretKey = 'Alpaca Secret Key is required'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -56,7 +65,7 @@ export default function RegisterPage() {
 
     setIsLoading(true)
     try {
-      await authAPI.register(name, email, password)
+      await authAPI.register(name, email, password, alpacaApiKey, alpacaSecretKey)
       router.push('/dashboard')
     } catch (error) {
       // Error is handled by the auth context
@@ -149,6 +158,30 @@ export default function RegisterPage() {
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <Input
+                label="Alpaca API Key"
+                type="text"
+                value={alpacaApiKey}
+                onChange={(e) => setAlpacaApiKey(e.target.value)}
+                placeholder="Enter your Alpaca API Key"
+                error={errors.alpacaApiKey}
+                required
+              />
+            </div>
+
+            <div>
+              <Input
+                label="Alpaca Secret Key"
+                type="password"
+                value={alpacaSecretKey}
+                onChange={(e) => setAlpacaSecretKey(e.target.value)}
+                placeholder="Enter your Alpaca Secret Key"
+                error={errors.alpacaSecretKey}
+                required
+              />
             </div>
 
             <div className="text-sm text-gray-600">
