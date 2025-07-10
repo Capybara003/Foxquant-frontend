@@ -1,11 +1,12 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthLogic } from '@/hooks/useAuthLogic'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import { Calendar, TrendingUp, TrendingDown } from 'lucide-react'
+import { historyAPI } from '@/services/api'
 
 interface HistoryItem {
   id: string
@@ -17,7 +18,7 @@ interface HistoryItem {
 }
 
 export default function HistoryPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuthLogic()
   const router = useRouter()
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,11 +32,7 @@ export default function HistoryPage() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/history', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        })
+        const response = await historyAPI.getHistory();
         if (response.ok) {
           const data = await response.json()
           setHistory(data)
@@ -126,11 +123,10 @@ export default function HistoryPage() {
                           ) : (
                             <TrendingDown className="h-4 w-4 text-red-500 mr-2" />
                           )}
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            item.type.toLowerCase() === 'buy' 
-                              ? 'bg-green-100 text-green-800' 
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${item.type.toLowerCase() === 'buy'
+                              ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
-                          }`}>
+                            }`}>
                             {item.type}
                           </span>
                         </div>
@@ -159,7 +155,7 @@ export default function HistoryPage() {
               <p className="text-2xl font-bold text-gray-900">{history.length}</p>
             </div>
           </Card>
-          
+
           <Card>
             <div className="text-center">
               <p className="text-sm font-medium text-gray-600">Buy Orders</p>
@@ -168,7 +164,7 @@ export default function HistoryPage() {
               </p>
             </div>
           </Card>
-          
+
           <Card>
             <div className="text-center">
               <p className="text-sm font-medium text-gray-600">Sell Orders</p>
@@ -177,7 +173,7 @@ export default function HistoryPage() {
               </p>
             </div>
           </Card>
-          
+
           <Card>
             <div className="text-center">
               <p className="text-sm font-medium text-gray-600">Success Rate</p>

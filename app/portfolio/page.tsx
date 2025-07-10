@@ -1,12 +1,13 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthLogic } from '@/hooks/useAuthLogic'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-import { DollarSign, TrendingUp, TrendingDown, PieChart } from 'lucide-react'
+import { DollarSign, TrendingUp, PieChart } from 'lucide-react'
+import { portfolioAPI } from '@/services/api'
 
 interface PortfolioData {
   balance: number
@@ -14,7 +15,7 @@ interface PortfolioData {
 }
 
 export default function PortfolioPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuthLogic()
   const router = useRouter()
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,11 +29,7 @@ export default function PortfolioPage() {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/portfolio', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        })
+        const response = await portfolioAPI.getPortfolio();
         if (response.ok) {
           const data = await response.json()
           setPortfolio(data)

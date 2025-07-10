@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthLogic } from '@/hooks/useAuthLogic'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -10,7 +10,7 @@ import Input from '@/components/ui/Input'
 import { User, Shield, Bell, CreditCard } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuthLogic()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('profile')
   const [formData, setFormData] = useState({

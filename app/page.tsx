@@ -1,13 +1,13 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthLogic } from '@/hooks/useAuthLogic'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Button from '@/components/ui/Button'
-import { TrendingUp, Shield, Zap, BarChart3 } from 'lucide-react'
+import { Shield, Zap, BarChart3 } from 'lucide-react'
 
 export default function HomePage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuthLogic()
   const router = useRouter()
 
   useEffect(() => {

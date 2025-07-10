@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthLogic } from '@/hooks/useAuthLogic'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card'
 import { DollarSign, TrendingUp, TrendingDown, Activity } from 'lucide-react'
 
 export default function DashboardPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuthLogic()
   const router = useRouter()
 
   useEffect(() => {

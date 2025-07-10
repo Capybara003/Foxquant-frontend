@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { authAPI } from '@/services/api'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -14,9 +14,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const router = useRouter();
 
-  const { login } = useAuth()
-  const router = useRouter()
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {}
@@ -37,12 +36,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     setIsLoading(true)
     try {
-      await login(email, password)
+      await authAPI.login(email, password);
+      router.push('/dashboard')
     } catch (error) {
       // Error is handled by the auth context
     } finally {

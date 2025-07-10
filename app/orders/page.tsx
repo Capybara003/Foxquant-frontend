@@ -1,12 +1,13 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthLogic } from '@/hooks/useAuthLogic'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { Clock, CheckCircle, XCircle, Plus } from 'lucide-react'
+import { ordersAPI } from '@/services/api'
 
 interface Order {
   id: string
@@ -18,7 +19,7 @@ interface Order {
 }
 
 export default function OrdersPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuthLogic()
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,11 +33,7 @@ export default function OrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/orders', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        })
+        const response = await ordersAPI.getOrders();
         if (response.ok) {
           const data = await response.json()
           setOrders(data)

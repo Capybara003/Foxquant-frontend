@@ -1,19 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Mail, ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { authAPI } from '@/services/api'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
-  const router = useRouter()
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {}
@@ -35,18 +34,10 @@ export default function ForgotPasswordPage() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:4000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
+      const response = await authAPI.forgotPassword(email);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send reset email')
+        throw new Error(response.error || 'Failed to send reset email')
       }
 
       setIsSubmitted(true)
@@ -83,7 +74,6 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   error={errors.email}
-                  icon={<Mail className="h-4 w-4" />}
                   required
                 />
               </div>

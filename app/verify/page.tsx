@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { authAPI } from '@/services/api'
 
 export default function VerifyPage() {
   const [isVerifying, setIsVerifying] = useState(true)
@@ -24,11 +25,9 @@ export default function VerifyPage() {
       }
 
       try {
-        const response = await fetch(`http://localhost:4000/api/auth/verify?token=${token}`)
-        const data = await response.json()
-
+        const response = await authAPI.verifyEmail(token);
         if (!response.ok) {
-          throw new Error(data.error || 'Verification failed')
+          throw new Error(response.error || 'Verification failed')
         }
 
         setIsVerified(true)

@@ -1,3 +1,5 @@
+import toast from "react-hot-toast";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
 // Helper function to get auth headers
@@ -17,7 +19,14 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     })
-    return response.json()
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify(data.user))
+
+    toast.success('Login successful!')
   },
 
   register: async (name: string, email: string, password: string) => {

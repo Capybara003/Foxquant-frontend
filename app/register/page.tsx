@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react'
+import { authAPI } from '@/services/api'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
-  const { register } = useAuth()
   const router = useRouter()
 
   const validateForm = () => {
@@ -57,7 +56,8 @@ export default function RegisterPage() {
 
     setIsLoading(true)
     try {
-      await register(name, email, password)
+      await authAPI.register(name, email, password)
+      router.push('/dashboard')
     } catch (error) {
       // Error is handled by the auth context
     } finally {

@@ -5,6 +5,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   helperText?: string
+  icon?: React.ReactElement
 }
 
 const Input: React.FC<InputProps> = ({
@@ -13,17 +14,21 @@ const Input: React.FC<InputProps> = ({
   helperText,
   className,
   id,
+  icon,
   ...props
 }) => {
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
 
   return (
     <div className="w-full">
-      {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
-          {label}
-        </label>
-      )}
+      <div className='flex gap-2 items-center'>
+        {icon && icon}
+        {label && (
+          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700">
+            {label}
+          </label>
+        )}
+      </div>
       <input
         id={inputId}
         className={clsx(
