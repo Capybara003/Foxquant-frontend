@@ -150,6 +150,10 @@ export const marketAPI = {
     const response = await fetch(`${API_BASE_URL}/portfolio/market/quote/${symbol}`, {
       headers: getAuthHeaders(),
     });
+    if (response.status === 403) {
+      const data = await response.json();
+      throw new Error(data.error || 'Alpaca API access forbidden. Please check your API keys and permissions.');
+    }
     return response.json();
   },
   getBars: async (symbol: string, params?: { timeframe?: string; start?: string; end?: string; limit?: string }) => {
