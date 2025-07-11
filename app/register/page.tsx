@@ -66,7 +66,6 @@ export default function RegisterPage() {
     setIsLoading(true)
     try {
       await authAPI.register(name, email, password, alpacaApiKey, alpacaSecretKey)
-      alert(`Your Paper API Key: ${alpacaApiKey}\nYour Paper Secret Key: ${alpacaSecretKey}`)
       router.push('/dashboard')
     } catch (error) {
       // Error is handled by the auth context
