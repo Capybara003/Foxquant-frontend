@@ -6,7 +6,9 @@ import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { 
   LayoutDashboard, 
-  TrendingUp, 
+  FlaskConical, 
+  PieChart, 
+  ShoppingCart, 
   History, 
   Settings, 
   LogOut, 
@@ -22,8 +24,9 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Portfolio', href: '/portfolio', icon: TrendingUp },
-  { name: 'Orders', href: '/orders', icon: TrendingUp },
+  { name: 'Backtest', href: '/backtest', icon: FlaskConical },
+  { name: 'Portfolio', href: '/portfolio', icon: PieChart },
+  { name: 'Orders', href: '/orders', icon: ShoppingCart },
   { name: 'History', href: '/history', icon: History },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]

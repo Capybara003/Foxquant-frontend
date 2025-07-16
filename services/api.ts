@@ -216,4 +216,19 @@ export const notificationsAPI = {
     });
     return response.json();
   },
-}; 
+};
+
+export const backtestAPI = {
+  runBacktest: async (params: { symbol: string; from: string; to: string }) => {
+    const response = await fetch(`${API_BASE_URL}/backtest`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(params),
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Backtest failed');
+    }
+    return response.json();
+  },
+} 
