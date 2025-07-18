@@ -530,7 +530,7 @@ export async function runVolatilityBreakout(highs: number[], lows: number[], clo
 
 // Market Event Comparison
 export async function fetchMarketEventComparison({ strategy, symbol, periodA, periodB, includeNews, token }: any) {
-  const url = "http://localhost:4000/api/market-event-comparison";
+  const url = `${API_BASE_URL}/market-event-comparison`;
   const options = {
     method: "POST",
     headers: {
@@ -554,7 +554,7 @@ export async function fetchMarketEventComparison({ strategy, symbol, periodA, pe
 
 // Order Logs
 export async function fetchOrderLogs(token: string) {
-  const url = "http://localhost:4000/api/order-logs";
+  const url = `${API_BASE_URL}/order-logs`;
   const options = {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -575,7 +575,7 @@ export async function fetchOrderLogs(token: string) {
 
 // Portfolio Replay
 export async function fetchPortfolioReplay({ strategy, symbol, from, to, token }: any) {
-  const url = "http://localhost:4000/api/portfolio-replay";
+  const url = `${API_BASE_URL}/portfolio-replay`;
   const options = {
     method: "POST",
     headers: {
