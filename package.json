@@ -13,6 +13,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-zoom": "^2.2.0",
     "clsx": "^2.0.0",
+    "lightweight-charts": "^5.0.8",
     "lucide-react": "^0.292.0",
     "next": "14.0.0",
     "react": "^18",
@@ -20,6 +21,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.48.0",
     "react-hot-toast": "^2.4.1",
+    "react-icons": "^5.5.0",
     "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {

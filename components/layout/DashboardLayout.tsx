@@ -14,7 +14,9 @@ import {
   LogOut, 
   Menu,
   X,
-  User
+  User,
+  BarChart2, // for Market Event Comparison
+  RefreshCcw // for Portfolio Replay
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -28,6 +30,8 @@ const navigation = [
   { name: 'Portfolio', href: '/portfolio', icon: PieChart },
   { name: 'Orders', href: '/orders', icon: ShoppingCart },
   { name: 'History', href: '/history', icon: History },
+  { name: 'Market Event Comparison', href: '/market-event-comparison', icon: BarChart2 },
+  { name: 'Portfolio Replay', href: '/portfolio-replay', icon: RefreshCcw },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 

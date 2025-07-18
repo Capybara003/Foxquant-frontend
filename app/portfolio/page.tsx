@@ -7,7 +7,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { DollarSign, TrendingUp, PieChart } from 'lucide-react'
-import { portfolioAPI } from '@/services/api'
+import { portfolioAPI, newsAPI } from '@/services/api'
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 import {
@@ -76,7 +76,9 @@ export default function PortfolioPage() {
   const [marketBars, setMarketBars] = useState<any>(null)
   const [marketLoading, setMarketLoading] = useState(false)
   const [marketError, setMarketError] = useState('')
-  const [marketTimeframe, setMarketTimeframe] = useState<'1D'|'1W'|'1M'|'6M'|'1Y'>('1M')
+  const [marketTimeframe, setMarketTimeframe] = useState<'1D' | '1W' | '1M' | '6M' | '1Y'>('1M')
+  const [news, setNews] = useState<any[]>([])
+  const [newsLoading, setNewsLoading] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -168,6 +170,22 @@ export default function PortfolioPage() {
     if (marketSymbol) fetchMarketData()
   }, [marketSymbol, marketTimeframe])
 
+  useEffect(() => {
+    const fetchNews = async () => {
+      setNewsLoading(true)
+      try {
+        const data = await newsAPI.getNews(marketSymbol)
+        setNews(data.data ? data.data.slice(0, 5) : [])
+      } catch (error) {
+        console.error('Failed to fetch news:', error)
+        setNews([])
+      } finally {
+        setNewsLoading(false)
+      }
+    }
+    if (marketSymbol) fetchNews()
+  }, [marketSymbol])
+
   if (isLoading || loading) {
     return (
       <DashboardLayout>
@@ -185,6 +203,7 @@ export default function PortfolioPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -195,7 +214,61 @@ export default function PortfolioPage() {
             Place Order
           </Button>
         </div>
-
+        {/* News */}
+        <Card title="Latest News" subtitle={`Top headlines for ${marketSymbol}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {newsLoading ? (
+              <div className="col-span-full flex justify-center items-center h-32">
+                <p className="text-gray-500">Loading news...</p>
+              </div>
+            ) : news.length === 0 ? (
+              <div className="col-span-full flex justify-center items-center h-32">
+                <p className="text-gray-500">No news found for {marketSymbol}.</p>
+              </div>
+            ) : (
+              news.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-100 flex flex-col h-full overflow-hidden group"
+                >
+                  {/* Image if available */}
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.title}
+                      className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                  ) : (
+                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    </div>
+                  )}
+                  <div className="flex-1 flex flex-col p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700">{item.source}</span>
+                      <span className="text-xs text-gray-400 ml-auto">{new Date(item.published_at).toLocaleDateString()}</span>
+                    </div>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-gray-900 text-sm hover:text-primary-600 line-clamp-2 flex items-center gap-1"
+                    >
+                      {item.title}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block ml-1 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7m0 0v7m0-7L10 14" /></svg>
+                    </a>
+                    {item.summary || item.description ? (
+                      <p className="text-xs text-gray-600 mt-2 line-clamp-3">{item.summary || item.description}</p>
+                    ) : null}
+                    {item.author && (
+                      <p className="text-xs text-gray-400 mt-2">By {item.author}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
         {/* Warning for Alpaca 403 error */}
         {marketError && marketError.includes('Alpaca API access forbidden') && (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
@@ -385,73 +458,76 @@ export default function PortfolioPage() {
               ))}
             </div>
           </div>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            {historyLoading ? (
-              <p className="text-gray-500">Loading chart...</p>
-            ) : history && history.equity.length > 0 ? (
-              <Line
-                ref={chartRef}
-                data={{
-                  labels: history.timestamp.map((ts) => new Date(ts * 1000)),
-                  datasets: [
-                    {
-                      label: 'Equity',
-                      data: showMetric === 'equity' ? history.equity : history.cash || [],
-                      borderColor: '#6366f1',
-                      backgroundColor: (ctx) => {
-                        const chart = ctx.chart;
-                        const {ctx: c, chartArea} = chart;
-                        if (!chartArea) return 'rgba(99,102,241,0.1)';
-                        const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                        gradient.addColorStop(0, 'rgba(99,102,241,0.3)');
-                        gradient.addColorStop(1, 'rgba(99,102,241,0.05)');
-                        return gradient;
+          <div className="w-full flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="w-full">
+              {historyLoading ? (
+                <p className="text-gray-500">Loading chart...</p>
+              ) : history && history.equity.length > 0 ? (
+                <Line
+                  ref={chartRef}
+                  data={{
+                    labels: history.timestamp.map((ts) => new Date(ts * 1000)),
+                    datasets: [
+                      {
+                        label: 'Equity',
+                        data: showMetric === 'equity' ? history.equity : history.cash || [],
+                        borderColor: '#6366f1',
+                        backgroundColor: (ctx) => {
+                          const chart = ctx.chart;
+                          const { ctx: c, chartArea } = chart;
+                          if (!chartArea) return 'rgba(99,102,241,0.1)';
+                          const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                          gradient.addColorStop(0, 'rgba(99,102,241,0.3)');
+                          gradient.addColorStop(1, 'rgba(99,102,241,0.05)');
+                          return gradient;
+                        },
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
                       },
-                      fill: true,
-                      tension: 0.3,
-                      pointRadius: 0,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      callbacks: {
-                        label: (ctx) => `$${ctx.parsed.y.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => `$${ctx.parsed.y.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+                        },
+                      },
+                      zoom: {
+                        pan: { enabled: true, mode: 'x' },
+                        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+                        limits: { x: { min: 'original', max: 'original' } },
                       },
                     },
-                    zoom: {
-                      pan: { enabled: true, mode: 'x' },
-                      zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                      limits: { x: { min: 'original', max: 'original' } },
+                    scales: {
+                      x: {
+                        type: 'time',
+                        time: { unit: historyRange === '1W' ? 'day' : 'month', tooltipFormat: 'PP' },
+                        ticks: { color: '#6b7280', font: { size: 12 } },
+                        grid: { color: '#e5e7eb' },
+                      },
+                      y: {
+                        ticks: { color: '#6b7280', font: { size: 12 }, callback: (v) => `$${v}` },
+                        grid: { color: '#e5e7eb' },
+                      },
                     },
-                  },
-                  scales: {
-                    x: {
-                      type: 'time',
-                      time: { unit: historyRange === '1W' ? 'day' : 'month', tooltipFormat: 'PP' },
-                      ticks: { color: '#6b7280', font: { size: 12 } },
-                      grid: { color: '#e5e7eb' },
-                    },
-                    y: {
-                      ticks: { color: '#6b7280', font: { size: 12 }, callback: (v) => `$${v}` },
-                      grid: { color: '#e5e7eb' },
-                    },
-                  },
-                }}
-              />
-            ) : (
-              <p className="text-gray-500">No history data</p>
-            )}
+                  }}
+                  height={100}
+                />
+              ) : (
+                <p className="text-gray-500">No history data</p>
+              )}
+            </div>
           </div>
         </Card>
 
         {/* Market Data */}
         <Card title="Market Data" subtitle="Real-time quote and price chart">
           <div className="mb-4 flex gap-2 items-end">
-            <input type="text" value={marketSymbol} onChange={e => setMarketSymbol(e.target.value.toUpperCase())} className="border rounded px-2 py-1" placeholder="Symbol (e.g. AAPL)" style={{width:120}} />
+            <input type="text" value={marketSymbol} onChange={e => setMarketSymbol(e.target.value.toUpperCase())} className="border rounded px-2 py-1" placeholder="Symbol (e.g. AAPL)" style={{ width: 120 }} />
             <select value={marketTimeframe} onChange={e => setMarketTimeframe(e.target.value as any)} className="border rounded px-2 py-1">
               <option value="1D">1D</option>
               <option value="1W">1W</option>
@@ -483,31 +559,34 @@ export default function PortfolioPage() {
             </div>
           )}
           {marketBars && marketBars.bars && marketBars.bars.length > 0 && (
-            <div className="h-64">
-              <Line
-                data={{
-                  labels: marketBars.bars.map((b: any) => new Date(b.t)),
-                  datasets: [
-                    {
-                      label: `${marketSymbol} Close`,
-                      data: marketBars.bars.map((b: any) => b.c),
-                      borderColor: '#6366f1',
-                      backgroundColor: 'rgba(99,102,241,0.1)',
-                      fill: true,
-                      tension: 0.3,
-                      pointRadius: 0,
+            <div className="w-full">
+              <div className="w-full">
+                <Line
+                  data={{
+                    labels: marketBars.bars.map((b: any) => new Date(b.t)),
+                    datasets: [
+                      {
+                        label: `${marketSymbol} Close`,
+                        data: marketBars.bars.map((b: any) => b.c),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99,102,241,0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { type: 'time', time: { unit: 'day', tooltipFormat: 'PP' }, ticks: { color: '#6b7280', font: { size: 12 } }, grid: { color: '#e5e7eb' } },
+                      y: { ticks: { color: '#6b7280', font: { size: 12 } }, grid: { color: '#e5e7eb' } },
                     },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  plugins: { legend: { display: false } },
-                  scales: {
-                    x: { type: 'time', time: { unit: 'day', tooltipFormat: 'PP' }, ticks: { color: '#6b7280', font: { size: 12 } }, grid: { color: '#e5e7eb' } },
-                    y: { ticks: { color: '#6b7280', font: { size: 12 } }, grid: { color: '#e5e7eb' } },
-                  },
-                }}
-              />
+                  }}
+                  height={100}
+                />
+              </div>
             </div>
           )}
         </Card>
