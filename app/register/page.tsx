@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react'
 import { authAPI } from '@/services/api'
+import toast from 'react-hot-toast'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -65,10 +66,15 @@ export default function RegisterPage() {
 
     setIsLoading(true)
     try {
-      await authAPI.register(name, email, password, alpacaApiKey, alpacaSecretKey)
-      router.push('/dashboard')
+      const response = await authAPI.register(name, email, password, alpacaApiKey, alpacaSecretKey)
+      if (response.error) {
+        toast.error(response.error)
+        return
+      }
+      toast.success('Registration successful! Please check your email to verify your account.')
+      router.push('/login')
     } catch (error) {
-      // Error is handled by the auth context
+      toast.error(error instanceof Error ? error.message : 'Registration failed')
     } finally {
       setIsLoading(false)
     }
