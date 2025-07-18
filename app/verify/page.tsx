@@ -67,7 +67,7 @@ export default function VerifyPage() {
             <p className="text-gray-600 mb-6">
               Your email has been successfully verified. You can now sign in to your account.
             </p>
-            <Button onClick={() => router.push('/login')} className="w-full">
+            <Button onClick={() => router.push('/login')} className="w-full flex justify-center items-center">
               Sign In
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
