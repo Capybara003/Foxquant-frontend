@@ -297,6 +297,21 @@ export const marketAPI = {
     }
     return response.json();
   },
+  getSymbols: async () => {
+    const url = `${API_BASE_URL}/portfolio/market/symbols`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    if (!response.ok) throw new Error('Failed to fetch symbols');
+    return response.json();
+  },
 }
 
 // News API functions
@@ -424,7 +439,7 @@ export const notificationsAPI = {
 };
 
 export const backtestAPI = {
-  runBacktest: async (params: { symbol: string; from: string; to: string; strategy: string; params?: any }) => {
+  runBacktest: async (params: { symbol: string; interval?: string; startDate?: string; endDate?: string; pythonCode?: string; params?: any }) => {
     const url = `${API_BASE_URL}/backtest`;
     const options = {
       method: 'POST',
