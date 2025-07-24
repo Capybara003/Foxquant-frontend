@@ -439,7 +439,7 @@ export const notificationsAPI = {
 };
 
 export const backtestAPI = {
-  runBacktest: async (params: { symbol: string; interval?: string; startDate?: string; endDate?: string; pythonCode?: string; params?: any }) => {
+  runBacktest: async (params: { symbol: string; from: string; to: string; strategy: string; params?: any }) => {
     const url = `${API_BASE_URL}/backtest`;
     const options = {
       method: 'POST',

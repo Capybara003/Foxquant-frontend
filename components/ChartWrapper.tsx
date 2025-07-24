@@ -1,28 +1,78 @@
 "use client";
 import React from "react";
 import { Line } from "react-chartjs-2";
-import { ChartOptions, ChartData } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface ChartWrapperProps {
-  data: any[]; // price data
-  results?: number[]; // equity curve or backtest results
+  labels: string[];
+  results: number[];
+  title?: string;
 }
 
-// DEPRECATED: Use TradingViewCandlestickChart for new charts.
-const ChartWrapper: React.FC<ChartWrapperProps> = ({ data, results }) => {
-  // For demonstration, use a simple SVG line chart overlay
-  // In production, use a charting library like TradingView or Recharts
-  // This is a placeholder for overlay logic
+const ChartWrapper: React.FC<ChartWrapperProps> = ({ labels, results, title }) => {
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: title || "Equity Curve",
+        data: results,
+        fill: false,
+        borderColor: "#2563eb",
+        backgroundColor: "#2563eb",
+        tension: 0.2,
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: "top" as const,
+      },
+      title: {
+        display: !!title,
+        text: title,
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: true,
+          text: "Date",
+        },
+        ticks: {
+          maxTicksLimit: 10,
+        },
+      },
+      y: {
+        display: true,
+        title: {
+          display: true,
+          text: "Equity",
+        },
+      },
+    },
+  };
+
   return (
     <div className="bg-white rounded shadow p-4 my-4">
-      <div className="text-lg font-bold mb-2">Chart</div>
-      {/* Render price chart here (placeholder) */}
-      <div className="h-64 w-full bg-gray-100 flex items-center justify-center">
-        <span className="text-gray-400">[Price Chart Placeholder]</span>
-      </div>
-      {results && (
-        <div className="mt-2 text-green-600">[Backtest Results Overlayed]</div>
-      )}
+      <div className="text-lg font-bold mb-2">{title || "Equity Curve"}</div>
+      <Line data={data} options={options} height={80} />
     </div>
   );
 };
