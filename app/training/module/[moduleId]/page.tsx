@@ -139,6 +139,7 @@ export default function ModulePage() {
             variant="outline"
             size="sm"
             onClick={() => router.push('/training')}
+            className='flex items-center'
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Training
@@ -208,6 +209,7 @@ export default function ModulePage() {
                     size="sm"
                     onClick={() => router.push(`/training/unit/${unit.id}`)}
                     disabled={!unit.isCompleted && index > 0 && !module.units[index - 1].isCompleted}
+                    className='flex items-center'
                   >
                     <Play className="h-4 w-4 mr-1" />
                     {unit.isCompleted ? 'Review' : 'Start'}

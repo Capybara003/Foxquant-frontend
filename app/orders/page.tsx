@@ -123,7 +123,7 @@ export default function OrdersPage() {
             <p className="text-gray-600">Manage your trading orders</p>
           </div>
           <Button onClick={() => router.push('/orders/new')}>
-            <div className='flex justify-center'>
+            <div className='flex justify-center items-center'>
               <Plus className="h-4 w-4 mr-2" />
               New Order
             </div>

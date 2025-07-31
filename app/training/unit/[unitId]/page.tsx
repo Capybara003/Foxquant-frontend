@@ -235,6 +235,7 @@ export default function UnitPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsFlipped(!isFlipped)}
+                className='flex items-center'
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
                 {isFlipped ? 'Show Question' : 'Show Answer'}
@@ -330,6 +331,7 @@ export default function UnitPage() {
               variant="outline"
               size="sm"
               onClick={() => router.back()}
+              className='flex items-center'
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
@@ -359,13 +361,14 @@ export default function UnitPage() {
           <Button
             variant="outline"
             onClick={() => router.back()}
+            className='flex justify-center items-center'
           >
             Back to Module
           </Button>
           <Button
             variant="primary"
             onClick={handleComplete}
-            className='flex justify-center'
+            className='flex justify-center items-center'
           >
             <Check className="h-4 w-4 mr-1" />
             Complete Unit
