@@ -611,3 +611,138 @@ export async function fetchPortfolioReplay({ strategy, symbol, from, to, token }
   if (!response.ok) throw new Error("Failed to fetch portfolio replay");
   return response.json();
 } 
+
+// Training API functions
+export const trainingAPI = {
+  getModules: async () => {
+    const url = `${API_BASE_URL}/training/modules`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+
+  getModule: async (moduleId: string) => {
+    const url = `${API_BASE_URL}/training/modules/${moduleId}`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+
+  getUnit: async (unitId: string) => {
+    const url = `${API_BASE_URL}/training/units/${unitId}`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+
+  getProgress: async () => {
+    const url = `${API_BASE_URL}/training/progress`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+
+  updateUnitProgress: async (unitId: string, progressData: {
+    completed: boolean
+    timeSpent: number
+    tokensEarned: number
+    score?: number
+  }) => {
+    const url = `${API_BASE_URL}/training/units/${unitId}/progress`;
+    const options = {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(progressData),
+    };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+} 
+
+// Gamification API functions
+export const gamificationAPI = {
+  getAchievements: async () => {
+    const url = `${API_BASE_URL}/training/achievements`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+
+  getBadges: async () => {
+    const url = `${API_BASE_URL}/training/badges`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+
+  getLeaderboard: async () => {
+    const url = `${API_BASE_URL}/training/leaderboard`;
+    const options = { headers: getAuthHeaders() };
+    console.log('API Request', { url, options });
+    let response;
+    try {
+      response = await fetch(url, options);
+      console.log('API Response', { url, status: response.status });
+    } catch (err) {
+      console.error('API Error', { url, err });
+      throw err;
+    }
+    return response.json();
+  },
+} 

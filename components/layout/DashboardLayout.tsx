@@ -16,7 +16,8 @@ import {
   X,
   User,
   BarChart2, // for Market Event Comparison
-  RefreshCcw // for Portfolio Replay
+  RefreshCcw, // for Portfolio Replay
+  GraduationCap // for Training
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -26,6 +27,7 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Training', href: '/training', icon: GraduationCap },
   { name: 'Backtest', href: '/backtest', icon: FlaskConical },
   { name: 'Portfolio', href: '/portfolio', icon: PieChart },
   { name: 'Orders', href: '/orders', icon: ShoppingCart },
