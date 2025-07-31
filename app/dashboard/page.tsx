@@ -80,6 +80,15 @@ export default function DashboardPage() {
     }
   }, [user])
 
+  // Get recent orders (last 3 filled orders)
+  const recentOrders = orderLogs
+    .filter(log => log.status === 'filled')
+    .sort((a, b) => new Date(b.filled_at || b.submitted_at).getTime() - new Date(a.filled_at || a.submitted_at).getTime())
+    .slice(0, 3);
+
+  // Get total trades count
+  const totalTrades = orderLogs.filter(log => log.status === 'filled').length;
+
   // CSV export handler
   const handleExportCSV = () => {
     const filtered = orderLogs.filter(log =>
@@ -182,7 +191,7 @@ export default function DashboardPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Trades</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {portfolioLoading ? 'Loading...' : portfolio?.daytrade_count || '0'}
+                  {logsLoading ? 'Loading...' : totalTrades}
                 </p>
               </div>
             </div>
@@ -193,74 +202,59 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card title="Recent Orders" subtitle="Your latest trading activity">
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{positionsLoading ? 'Loading...' : positions[0]?.symbol || '-'}</p>
-                  <p className="text-sm text-gray-600">Buy {positionsLoading ? '...' : positions[0]?.qty || '-' } shares</p>
+              {logsLoading ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500">Loading recent orders...</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-green-600">{positionsLoading ? '...' : `$${positions[0]?.market_value || '-'}`}</p>
-                  <p className="text-xs text-gray-500">2 hours ago</p>
+              ) : recentOrders.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500">No recent orders found</p>
                 </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{positionsLoading ? 'Loading...' : positions[1]?.symbol || '-'}</p>
-                  <p className="text-sm text-gray-600">Sell {positionsLoading ? '...' : positions[1]?.qty || '-' } shares</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-red-600">{positionsLoading ? '...' : `$${positions[1]?.market_value || '-'}`}</p>
-                  <p className="text-xs text-gray-500">4 hours ago</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{positionsLoading ? 'Loading...' : positions[2]?.symbol || '-'}</p>
-                  <p className="text-sm text-gray-600">Buy {positionsLoading ? '...' : positions[2]?.qty || '-' } shares</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-green-600">{positionsLoading ? '...' : `$${positions[2]?.market_value || '-'}`}</p>
-                  <p className="text-xs text-gray-500">6 hours ago</p>
-                </div>
-              </div>
+              ) : (
+                recentOrders.map((order, index) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{order.symbol}</p>
+                      <p className="text-sm text-gray-600">{order.side} {order.qty} shares</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-medium ${order.side === 'buy' ? 'text-green-600' : 'text-red-600'}`}>
+                        {order.side === 'buy' ? 'Bought' : 'Sold'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {order.filled_at ? new Date(order.filled_at).toLocaleString() : new Date(order.submitted_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
 
           <Card title="Portfolio Allocation" subtitle="Your current holdings">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[0]?.symbol || '-'}</span>
+              {positionsLoading ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500">Loading positions...</p>
                 </div>
-                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[0]?.market_value || '-'}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[1]?.symbol || '-'}</span>
+              ) : positions.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500">No positions found</p>
                 </div>
-                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[1]?.market_value || '-'}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap items-center">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[2]?.symbol || '-'}</span>
-                </div>
-                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[2]?.market_value || '-'}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap items-center">
-                  <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[3]?.symbol || '-'}</span>
-                </div>
-                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[3]?.market_value || '-'}</span>
-              </div>
+              ) : (
+                positions.slice(0, 4).map((position, index) => {
+                  const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500'];
+                  return (
+                    <div key={position.symbol} className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center">
+                        <div className={`w-3 h-3 ${colors[index % colors.length]} rounded-full mr-3`}></div>
+                        <span className="text-sm font-medium">{position.symbol}</span>
+                      </div>
+                      <span className="text-sm font-medium">${Number(position.market_value).toLocaleString()}</span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </Card>
         </div>

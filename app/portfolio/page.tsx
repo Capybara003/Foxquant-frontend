@@ -89,11 +89,8 @@ export default function PortfolioPage() {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const response = await portfolioAPI.getPortfolio();
-        if (response.ok) {
-          const data = await response.json()
-          setPortfolio(data)
-        }
+        const data = await portfolioAPI.getPortfolio();
+        setPortfolio(data)
       } catch (error) {
         console.error('Failed to fetch portfolio:', error)
       } finally {
@@ -320,56 +317,6 @@ export default function PortfolioPage() {
             </div>
           </Card>
         </div>
-
-        {/* Account Details */}
-        <Card title="Account Details" subtitle="More details from your Alpaca account">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <span className="font-medium text-gray-700">Cash:</span>
-              <span className="ml-2">${portfolio?.cash ? Number(portfolio.cash).toLocaleString() : '0.00'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Equity:</span>
-              <span className="ml-2">${portfolio?.equity ? Number(portfolio.equity).toLocaleString() : '0.00'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Long Market Value:</span>
-              <span className="ml-2">${portfolio?.long_market_value ? Number(portfolio.long_market_value).toLocaleString() : '0.00'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Short Market Value:</span>
-              <span className="ml-2">${portfolio?.short_market_value ? Number(portfolio.short_market_value).toLocaleString() : '0.00'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Daytrade Count (last 5 days):</span>
-              <span className="ml-2">{portfolio?.daytrade_count ?? '0'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Pattern Day Trader:</span>
-              <span className="ml-2">{portfolio?.pattern_day_trader ? 'Yes' : 'No'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Trading Blocked:</span>
-              <span className="ml-2">{portfolio?.trading_blocked ? 'Yes' : 'No'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Transfers Blocked:</span>
-              <span className="ml-2">{portfolio?.transfers_blocked ? 'Yes' : 'No'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Account Blocked:</span>
-              <span className="ml-2">{portfolio?.account_blocked ? 'Yes' : 'No'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Account Created:</span>
-              <span className="ml-2">{portfolio?.created_at ? new Date(portfolio.created_at).toLocaleString() : ''}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Currency:</span>
-              <span className="ml-2">{portfolio?.currency || 'USD'}</span>
-            </div>
-          </div>
-        </Card>
 
         {/* Holdings */}
         <Card title="Current Holdings" subtitle="Your active positions">
