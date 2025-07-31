@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card'
 import { DollarSign, TrendingUp, TrendingDown, Activity } from 'lucide-react'
 import { fetchOrderLogs } from '../../services/api';
 import { FaInfoCircle, FaDownload } from 'react-icons/fa';
+import { portfolioAPI } from '@/services/api'
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuthLogic()
@@ -26,6 +27,10 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState('');
   // Add expanded row state for audit trail
   const [expandedRows, setExpandedRows] = useState<{ [id: string]: boolean }>({});
+  const [portfolio, setPortfolio] = useState<any>(null)
+  const [portfolioLoading, setPortfolioLoading] = useState(true)
+  const [positions, setPositions] = useState<any[]>([])
+  const [positionsLoading, setPositionsLoading] = useState(true)
 
   useEffect(() => {
     async function loadLogs() {
@@ -43,6 +48,37 @@ export default function DashboardPage() {
     }
     loadLogs();
   }, []);
+
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      try {
+        const data = await portfolioAPI.getPortfolio()
+        setPortfolio(data)
+      } catch (error) {
+        console.error('Failed to fetch portfolio:', error)
+      } finally {
+        setPortfolioLoading(false)
+      }
+    }
+    if (user) {
+      fetchPortfolio()
+    }
+  }, [user])
+  useEffect(() => {
+    const fetchPositions = async () => {
+      try {
+        const data = await portfolioAPI.getPositions()
+        setPositions(data)
+      } catch (error) {
+        console.error('Failed to fetch positions:', error)
+      } finally {
+        setPositionsLoading(false)
+      }
+    }
+    if (user) {
+      fetchPositions()
+    }
+  }, [user])
 
   // CSV export handler
   const handleExportCSV = () => {
@@ -103,7 +139,9 @@ export default function DashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Portfolio Value</p>
-                <p className="text-2xl font-bold text-gray-900">$10,000.00</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {portfolioLoading ? 'Loading...' : `$${portfolio?.portfolio_value ? Number(portfolio.portfolio_value).toLocaleString() : '0.00'}`}
+                </p>
               </div>
             </div>
           </Card>
@@ -114,8 +152,10 @@ export default function DashboardPage() {
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Gain</p>
-                <p className="text-2xl font-bold text-green-600">+$250.00</p>
+                <p className="text-sm font-medium text-gray-600">Buying Power</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {portfolioLoading ? 'Loading...' : `$${portfolio?.buying_power ? Number(portfolio.buying_power).toLocaleString() : '0.00'}`}
+                </p>
               </div>
             </div>
           </Card>
@@ -126,8 +166,10 @@ export default function DashboardPage() {
                 <TrendingDown className="h-6 w-6 text-red-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Open Orders</p>
-                <p className="text-2xl font-bold text-gray-900">3</p>
+                <p className="text-sm font-medium text-gray-600">Cash</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {portfolioLoading ? 'Loading...' : `$${portfolio?.cash ? Number(portfolio.cash).toLocaleString() : '0.00'}`}
+                </p>
               </div>
             </div>
           </Card>
@@ -139,7 +181,9 @@ export default function DashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Trades</p>
-                <p className="text-2xl font-bold text-gray-900">127</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {portfolioLoading ? 'Loading...' : portfolio?.daytrade_count || '0'}
+                </p>
               </div>
             </div>
           </Card>
@@ -151,33 +195,33 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">AAPL</p>
-                  <p className="text-sm text-gray-600">Buy 10 shares</p>
+                  <p className="font-medium text-gray-900">{positionsLoading ? 'Loading...' : positions[0]?.symbol || '-'}</p>
+                  <p className="text-sm text-gray-600">Buy {positionsLoading ? '...' : positions[0]?.qty || '-' } shares</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-green-600">$1,750.00</p>
+                  <p className="text-sm font-medium text-green-600">{positionsLoading ? '...' : `$${positions[0]?.market_value || '-'}`}</p>
                   <p className="text-xs text-gray-500">2 hours ago</p>
                 </div>
               </div>
               
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">GOOGL</p>
-                  <p className="text-sm text-gray-600">Sell 5 shares</p>
+                  <p className="font-medium text-gray-900">{positionsLoading ? 'Loading...' : positions[1]?.symbol || '-'}</p>
+                  <p className="text-sm text-gray-600">Sell {positionsLoading ? '...' : positions[1]?.qty || '-' } shares</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-red-600">$8,250.00</p>
+                  <p className="text-sm font-medium text-red-600">{positionsLoading ? '...' : `$${positions[1]?.market_value || '-'}`}</p>
                   <p className="text-xs text-gray-500">4 hours ago</p>
                 </div>
               </div>
               
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">TSLA</p>
-                  <p className="text-sm text-gray-600">Buy 15 shares</p>
+                  <p className="font-medium text-gray-900">{positionsLoading ? 'Loading...' : positions[2]?.symbol || '-'}</p>
+                  <p className="text-sm text-gray-600">Buy {positionsLoading ? '...' : positions[2]?.qty || '-' } shares</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-green-600">$3,450.00</p>
+                  <p className="text-sm font-medium text-green-600">{positionsLoading ? '...' : `$${positions[2]?.market_value || '-'}`}</p>
                   <p className="text-xs text-gray-500">6 hours ago</p>
                 </div>
               </div>
@@ -189,33 +233,33 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Technology</span>
+                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[0]?.symbol || '-'}</span>
                 </div>
-                <span className="text-sm font-medium">45%</span>
+                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[0]?.market_value || '-'}</span>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Healthcare</span>
+                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[1]?.symbol || '-'}</span>
                 </div>
-                <span className="text-sm font-medium">25%</span>
+                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[1]?.market_value || '-'}</span>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Finance</span>
+                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[2]?.symbol || '-'}</span>
                 </div>
-                <span className="text-sm font-medium">20%</span>
+                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[2]?.market_value || '-'}</span>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center">
                   <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Energy</span>
+                  <span className="text-sm font-medium">{positionsLoading ? 'Loading...' : positions[3]?.symbol || '-'}</span>
                 </div>
-                <span className="text-sm font-medium">10%</span>
+                <span className="text-sm font-medium">{positionsLoading ? '...' : positions[3]?.market_value || '-'}</span>
               </div>
             </div>
           </Card>
