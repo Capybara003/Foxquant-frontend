@@ -82,12 +82,12 @@ export default function BacktestPage() {
               {strategies.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
-          {strategy !== 'basicMomentum' ? (
+          {/* {strategy !== 'basicMomentum' ? (
             <div className="w-full bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
               <strong>Paid Tier:</strong> This strategy is available in the Paid Tier. Demo only.
             </div>
           ) : (
-            <>
+            <> */}
               <div className="w-full">
                 <label className="block text-sm font-medium mb-1">Symbol</label>
                 <Select
@@ -139,8 +139,8 @@ export default function BacktestPage() {
               >
                 {loading ? 'Running...' : 'Run Backtest'}
               </button>
-            </>
-          )}
+            {/* </>
+          )} */}
         </form>
         {symbol && exchange && strategy === 'basicMomentum' && (
           <div className="bg-white rounded shadow p-4 mb-8">
