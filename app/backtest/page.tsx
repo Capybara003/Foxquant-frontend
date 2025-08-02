@@ -142,7 +142,7 @@ export default function BacktestPage() {
             {/* </>
           )} */}
         </form>
-        {symbol && exchange && strategy === 'basicMomentum' && (
+        {symbol && exchange && (
           <div className="bg-white rounded shadow p-4 mb-8">
             <TradingViewWidget symbol={`${exchange}:${symbol}`} interval={interval} />
           </div>
