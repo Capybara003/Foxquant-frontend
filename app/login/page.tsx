@@ -1,23 +1,21 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { authAPI } from '@/services/api'
+import { useState, useCallback, memo } from 'react'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
-export default function LoginPage() {
+const LoginPage = memo(() => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
-  const router = useRouter();
+  const { login } = useAuth()
 
-
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors: { [key: string]: string } = {}
 
     if (!email) {
@@ -32,23 +30,35 @@ export default function LoginPage() {
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
+  }, [email, password])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) return
 
     setIsLoading(true)
     try {
-      await authAPI.login(email, password);
-      router.push('/dashboard')
+      await login(email, password);
+      // Navigation is handled by the AuthContext
     } catch (error) {
-      // Error is handled by the auth context
+      // Error is handled by the AuthContext
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [email, password, login, validateForm])
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+  }, [])
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value)
+  }, [])
+
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword(prev => !prev)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -70,7 +80,7 @@ export default function LoginPage() {
                 label="Email Address"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 placeholder="Enter your email"
                 error={errors.email}
                 icon={<Mail className="h-4 w-4" />}
@@ -84,7 +94,7 @@ export default function LoginPage() {
                   label="Password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   placeholder="Enter your password"
                   error={errors.password}
                   icon={<Lock className="h-4 w-4" />}
@@ -93,7 +103,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={togglePasswordVisibility}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -120,4 +130,8 @@ export default function LoginPage() {
       </div>
     </div>
   )
-} 
+})
+
+LoginPage.displayName = 'LoginPage'
+
+export default LoginPage 

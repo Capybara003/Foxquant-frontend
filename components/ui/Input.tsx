@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useId } from 'react'
 import { clsx } from 'clsx'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -17,7 +17,8 @@ const Input: React.FC<InputProps> = ({
   icon,
   ...props
 }) => {
-  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
+  const generatedId = useId()
+  const inputId = id || generatedId
 
   return (
     <div className="w-full">

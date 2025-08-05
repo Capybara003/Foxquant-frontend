@@ -1,14 +1,16 @@
 'use client'
 
-import { useAuthLogic } from '@/hooks/useAuthLogic'
+import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import { DollarSign, TrendingUp, TrendingDown, Activity } from 'lucide-react'
 import { fetchOrderLogs } from '../../services/api';
 import { FaInfoCircle, FaDownload } from 'react-icons/fa';
 import { portfolioAPI } from '@/services/api'
+import { useAuthError } from '@/hooks/useAuthError'
+import React from 'react';
 
 interface Position {
   symbol: string;
@@ -22,14 +24,9 @@ interface Position {
 }
 
 export default function DashboardPage() {
-  const { user, isLoading } = useAuthLogic()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login')
-    }
-  }, [user, isLoading, router])
+  const { handleAuthError } = useAuthError()
 
   // Order logs state
   const [orderLogs, setOrderLogs] = useState<any[]>([]);
@@ -43,58 +40,63 @@ export default function DashboardPage() {
   const [positions, setPositions] = useState<Position[]>([])
   const [positionsLoading, setPositionsLoading] = useState(true)
 
+  // Combined useEffect for authentication and data loading
   useEffect(() => {
-    async function loadLogs() {
-      setLogsLoading(true);
-      setLogsError('');
-      try {
-        const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || '') : '';
-        const logs = await fetchOrderLogs(token);
-        // Ensure logs is an array, if not, set empty array
-        setOrderLogs(Array.isArray(logs) ? logs : []);
-      } catch (err: any) {
-        setLogsError(err?.message || 'Failed to fetch order logs');
-        setOrderLogs([]); // Set empty array on error
-      } finally {
-        setLogsLoading(false);
-      }
+    if (!isLoading && !user) {
+      router.push('/login')
+      return
     }
-    loadLogs();
-  }, []);
 
-  useEffect(() => {
-    const fetchPortfolio = async () => {
-      try {
-        const data = await portfolioAPI.getPortfolio()
-        setPortfolio(data)
-      } catch (error) {
-        console.error('Failed to fetch portfolio:', error)
-        setPortfolio(null) // Set null on error
-      } finally {
-        setPortfolioLoading(false)
-      }
+    if (user && !portfolio && !orderLogs.length) {
+      // Only load data if user is available and data hasn't been loaded yet
+      const loadData = async () => {
+        try {
+          // Load all data in parallel
+          const [portfolioData, positionsData, logsData] = await Promise.allSettled([
+            portfolioAPI.getPortfolio(),
+            portfolioAPI.getPositions(),
+            fetchOrderLogs(localStorage.getItem('token') || '')
+          ]);
+
+          // Handle portfolio data
+          if (portfolioData.status === 'fulfilled') {
+            setPortfolio(portfolioData.value);
+          } else {
+            console.error('Failed to fetch portfolio:', portfolioData.reason);
+            setPortfolio(null);
+          }
+
+          // Handle positions data
+          if (positionsData.status === 'fulfilled') {
+            setPositions(Array.isArray(positionsData.value) ? positionsData.value : []);
+          } else {
+            console.error('Failed to fetch positions:', positionsData.reason);
+            setPositions([]);
+          }
+
+          // Handle order logs data
+          if (logsData.status === 'fulfilled') {
+            setOrderLogs(Array.isArray(logsData.value) ? logsData.value : []);
+          } else {
+            console.error('Failed to fetch order logs:', logsData.reason);
+            setOrderLogs([]);
+          }
+        } catch (error: any) {
+          console.error('Error loading dashboard data:', error);
+          // Handle authentication errors
+          if (handleAuthError(error)) {
+            return;
+          }
+        } finally {
+          setPortfolioLoading(false);
+          setPositionsLoading(false);
+          setLogsLoading(false);
+        }
+      };
+
+      loadData();
     }
-    if (user) {
-      fetchPortfolio()
-    }
-  }, [user])
-  useEffect(() => {
-    const fetchPositions = async () => {
-      try {
-        const data = await portfolioAPI.getPositions()
-        // Ensure data is an array, if not, set empty array
-        setPositions(Array.isArray(data) ? data : [])
-      } catch (error) {
-        console.error('Failed to fetch positions:', error)
-        setPositions([]) // Set empty array on error
-      } finally {
-        setPositionsLoading(false)
-      }
-    }
-    if (user) {
-      fetchPositions()
-    }
-  }, [user])
+  }, [user, isLoading, router, portfolio, orderLogs.length, handleAuthError]);
 
   // Get recent orders (last 3 filled orders)
   const recentOrders = orderLogs
@@ -346,8 +348,8 @@ export default function DashboardPage() {
                     (log.symbol && log.symbol.toLowerCase().includes(filter.toLowerCase())) ||
                     (log.status && log.status.toLowerCase().includes(filter.toLowerCase()))
                   ).map(log => (
-                    <>
-                      <tr key={log.id} className="border-t">
+                    <React.Fragment key={log.id}>
+                      <tr className="border-t">
                         <td className="px-2 py-1">{log?.symbol}</td>
                         <td className="px-2 py-1">{log?.qty}</td>
                         <td className="px-2 py-1">{log?.side}</td>
@@ -380,7 +382,7 @@ export default function DashboardPage() {
                         </td>
                       </tr>
                       {expandedRows[log.id] && (
-                        <tr key={log.id + '-audit'}>
+                        <tr key={`${log.id}-audit`}>
                           <td colSpan={10} className="bg-gray-50 px-4 py-2">
                             <div>
                               <div className="font-semibold mb-1">Audit Trail:</div>
@@ -404,7 +406,7 @@ export default function DashboardPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

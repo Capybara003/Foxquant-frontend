@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuthLogic } from '@/hooks/useAuthLogic'
+import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
@@ -18,7 +18,7 @@ import {
   RefreshCcw, // for Portfolio Replay
   GraduationCap // for Training
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useCallback, memo } from 'react'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -35,21 +35,29 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, logout } = useAuthLogic()
+const DashboardLayout = memo(({ children }: DashboardLayoutProps) => {
+  const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout()
-  }
+  }, [logout])
+
+  const handleSidebarToggle = useCallback(() => {
+    setSidebarOpen(prev => !prev)
+  }, [])
+
+  const handleSidebarClose = useCallback(() => {
+    setSidebarOpen(false)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={handleSidebarClose} />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center gap-3">
@@ -57,7 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="text-xl font-bold text-gray-900">FoxQuant</span>
             </div>
             <button
-              onClick={() => setSidebarOpen(false)}
+              onClick={handleSidebarClose}
               className="text-gray-400 hover:text-gray-600"
             >
               <X className="h-6 w-6" />
@@ -75,7 +83,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       ? 'bg-primary-100 text-primary-900'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={handleSidebarClose}
                 >
                   <item.icon className="mr-3 h-5 w-5" />
                   {item.name}
@@ -162,7 +170,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <button
             type="button"
             className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
-            onClick={() => setSidebarOpen(true)}
+            onClick={handleSidebarToggle}
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -189,4 +197,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
     </div>
   )
-} 
+})
+
+DashboardLayout.displayName = 'DashboardLayout'
+
+export default DashboardLayout 

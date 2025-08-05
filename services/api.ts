@@ -8,10 +8,7 @@ const handleAuthError = (response: Response) => {
     // Clear stored auth data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    // Redirect to login
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
+    // Redirect to login using router (this will be handled by the component using the API)
     throw new Error('Authentication failed. Please log in again.');
   }
   return response;

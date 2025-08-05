@@ -1,24 +1,37 @@
 'use client'
 import { useNotifications } from "@/hooks/useNotifications";
 import Button from "./Button";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 
-export default function NotificationsBell() {
+const NotificationsBell = memo(() => {
   const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  const handleClick = useCallback((e: MouseEvent) => {
+    if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+  }, []);
+
+  const toggleOpen = useCallback(() => {
+    setOpen(v => !v);
+  }, []);
+
+  const handleMarkAsRead = useCallback((id: number) => {
+    markAsRead(id);
+  }, [markAsRead]);
+
+  const handleDeleteNotification = useCallback((id: number) => {
+    deleteNotification(id);
+  }, [deleteNotification]);
+
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
     if (open) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+  }, [open, handleClick]);
 
   return (
     <div className="relative" ref={ref}>
-      <Button variant="primary" onClick={() => setOpen(v => !v)}>
+      <Button variant="primary" onClick={toggleOpen}>
         <span className="relative">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -44,9 +57,9 @@ export default function NotificationsBell() {
                   <div className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</div>
                 </div>
                 {!n.read && (
-                  <button className="text-xs text-blue-600 underline" onClick={() => markAsRead(n.id)}>Mark as read</button>
+                  <button className="text-xs text-blue-600 underline" onClick={() => handleMarkAsRead(n.id)}>Mark as read</button>
                 )}
-                <button className="text-xs text-gray-400 ml-2" onClick={() => deleteNotification(n.id)} title="Delete">✕</button>
+                <button className="text-xs text-gray-400 ml-2" onClick={() => handleDeleteNotification(n.id)} title="Delete">✕</button>
               </div>
             ))
           )}
@@ -54,4 +67,8 @@ export default function NotificationsBell() {
       )}
     </div>
   );
-} 
+});
+
+NotificationsBell.displayName = 'NotificationsBell';
+
+export default NotificationsBell; 
