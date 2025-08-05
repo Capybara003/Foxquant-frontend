@@ -2,6 +2,21 @@ import toast from "react-hot-toast";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
+// Helper function to handle authentication errors
+const handleAuthError = (response: Response) => {
+  if (response.status === 401) {
+    // Clear stored auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    // Redirect to login
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new Error('Authentication failed. Please log in again.');
+  }
+  return response;
+}
+
 // Helper function to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')
@@ -120,6 +135,7 @@ export const portfolioAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -134,6 +150,7 @@ export const portfolioAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -153,6 +170,7 @@ export const portfolioAPI = {
     try {
       response = await fetch(url.toString(), options);
       console.log('API Response', { url: url.toString(), status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url: url.toString(), err });
       throw err;
@@ -171,6 +189,7 @@ export const ordersAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -196,6 +215,7 @@ export const ordersAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -214,6 +234,7 @@ export const ordersAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -232,6 +253,7 @@ export const historyAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -251,6 +273,7 @@ export const historyAPI = {
     try {
       response = await fetch(url.toString(), options);
       console.log('API Response', { url: url.toString(), status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url: url.toString(), err });
       throw err;
@@ -268,6 +291,7 @@ export const marketAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -291,6 +315,7 @@ export const marketAPI = {
     try {
       response = await fetch(url.toString(), options);
       console.log('API Response', { url: url.toString(), status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url: url.toString(), err });
       throw err;
@@ -305,6 +330,7 @@ export const marketAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -324,6 +350,7 @@ export const newsAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -345,6 +372,7 @@ export const accountAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -362,6 +390,7 @@ export const accountAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -379,6 +408,7 @@ export const notificationsAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -396,6 +426,7 @@ export const notificationsAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -413,6 +444,7 @@ export const notificationsAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -430,6 +462,7 @@ export const notificationsAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -451,6 +484,7 @@ export const backtestAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -580,6 +614,7 @@ export async function fetchOrderLogs(token: string) {
   try {
     response = await fetch(url, options);
     console.log('API Response', { url, status: response.status });
+    handleAuthError(response);
   } catch (err) {
     console.error('API Error', { url, err });
     throw err;
@@ -622,6 +657,7 @@ export const trainingAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -637,6 +673,7 @@ export const trainingAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -652,6 +689,7 @@ export const trainingAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -667,6 +705,7 @@ export const trainingAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -691,6 +730,7 @@ export const trainingAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -709,6 +749,7 @@ export const gamificationAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -724,6 +765,7 @@ export const gamificationAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;
@@ -739,6 +781,7 @@ export const gamificationAPI = {
     try {
       response = await fetch(url, options);
       console.log('API Response', { url, status: response.status });
+      handleAuthError(response);
     } catch (err) {
       console.error('API Error', { url, err });
       throw err;

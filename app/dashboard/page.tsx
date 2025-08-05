@@ -50,9 +50,11 @@ export default function DashboardPage() {
       try {
         const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || '') : '';
         const logs = await fetchOrderLogs(token);
-        setOrderLogs(logs);
+        // Ensure logs is an array, if not, set empty array
+        setOrderLogs(Array.isArray(logs) ? logs : []);
       } catch (err: any) {
         setLogsError(err?.message || 'Failed to fetch order logs');
+        setOrderLogs([]); // Set empty array on error
       } finally {
         setLogsLoading(false);
       }
@@ -67,6 +69,7 @@ export default function DashboardPage() {
         setPortfolio(data)
       } catch (error) {
         console.error('Failed to fetch portfolio:', error)
+        setPortfolio(null) // Set null on error
       } finally {
         setPortfolioLoading(false)
       }
@@ -79,9 +82,11 @@ export default function DashboardPage() {
     const fetchPositions = async () => {
       try {
         const data = await portfolioAPI.getPositions()
-        setPositions(data)
+        // Ensure data is an array, if not, set empty array
+        setPositions(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Failed to fetch positions:', error)
+        setPositions([]) // Set empty array on error
       } finally {
         setPositionsLoading(false)
       }
@@ -248,7 +253,7 @@ export default function DashboardPage() {
                 <div className="text-center py-4">
                   <p className="text-gray-500">Loading positions...</p>
                 </div>
-              ) : positions.length === 0 ? (
+              ) : !Array.isArray(positions) || positions.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-gray-500">No positions found</p>
                 </div>
