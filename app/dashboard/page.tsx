@@ -10,6 +10,17 @@ import { fetchOrderLogs } from '../../services/api';
 import { FaInfoCircle, FaDownload } from 'react-icons/fa';
 import { portfolioAPI } from '@/services/api'
 
+interface Position {
+  symbol: string;
+  qty: string;
+  avg_entry_price: string;
+  current_price: string;
+  market_value: string;
+  unrealized_pl: string;
+  unrealized_plpc: string;
+  side: string;
+}
+
 export default function DashboardPage() {
   const { user, isLoading } = useAuthLogic()
   const router = useRouter()
@@ -29,7 +40,7 @@ export default function DashboardPage() {
   const [expandedRows, setExpandedRows] = useState<{ [id: string]: boolean }>({});
   const [portfolio, setPortfolio] = useState<any>(null)
   const [portfolioLoading, setPortfolioLoading] = useState(true)
-  const [positions, setPositions] = useState<any[]>([])
+  const [positions, setPositions] = useState<Position[]>([])
   const [positionsLoading, setPositionsLoading] = useState(true)
 
   useEffect(() => {
