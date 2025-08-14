@@ -10,7 +10,6 @@ export function useNotifications() {
   const { handleAuthError } = useAuthError();
 
   const fetchNotifications = useCallback(async () => {
-    // Check if user is authenticated before making API calls
     const token = localStorage.getItem('token');
     if (!token) {
       setNotifications([]);
@@ -26,14 +25,13 @@ export function useNotifications() {
         return;
       }
       setError("Failed to fetch notifications");
-      setNotifications([]); // Ensure notifications is always an array on error
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   }, [handleAuthError]);
 
   const pollNotifications = useCallback(async () => {
-    // Check if user is authenticated before polling
     const token = localStorage.getItem('token');
     if (!token) {
       return;
@@ -72,7 +70,6 @@ export function useNotifications() {
   }, [handleAuthError]);
 
   useEffect(() => {
-    // Check if user is authenticated before setting up polling
     const token = localStorage.getItem('token');
     if (!token) {
       return;
@@ -80,12 +77,10 @@ export function useNotifications() {
 
     fetchNotifications();
     
-    // Clear any existing interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     
-    // Set up new interval
     intervalRef.current = setInterval(pollNotifications, 15000);
     
     return () => {

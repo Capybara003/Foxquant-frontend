@@ -133,7 +133,6 @@ export default function ModulePage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center space-x-4">
           <Button
             variant="outline"
@@ -150,7 +149,6 @@ export default function ModulePage() {
           </div>
         </div>
 
-        {/* Progress Summary */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -172,7 +170,6 @@ export default function ModulePage() {
           </div>
         </Card>
 
-        {/* Units List */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Units</h2>
           {module.units.map((unit, index) => (
@@ -220,7 +217,6 @@ export default function ModulePage() {
           ))}
         </div>
 
-        {/* Module Completion */}
         {progress === 100 && (
           <Card className="p-6 bg-green-50 border-green-200">
             <div className="flex items-center space-x-3">

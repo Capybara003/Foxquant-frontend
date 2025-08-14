@@ -61,7 +61,6 @@ export default function MarketEventComparisonPage() {
   const chartRef = useRef<any>(null);
   const [popover, setPopover] = useState<{ x: number; y: number; content: string } | null>(null);
 
-  // Dummy: Replace with real auth token logic
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
 
   const handleCompare = async () => {
@@ -85,17 +84,14 @@ export default function MarketEventComparisonPage() {
     }
   };
 
-  // Chart data and options with custom marker shapes and popover
   const getChartData = () => {
     if (!result) return { labels: [], datasets: [] };
-    // Trade markers for A
     const tradeMarkersA = result.periodA.trades.map((trade: any) =>
       trade.pnl > 0 ? '#16a34a' : trade.pnl < 0 ? '#dc2626' : 'rgba(0,0,0,0)'
     );
     const pointStylesA = result.periodA.trades.map((trade: any) =>
       trade.pnl > 0 ? triangleUp : trade.pnl < 0 ? triangleDown : 'circle'
     );
-    // Trade markers for B
     const tradeMarkersB = result.periodB.trades.map((trade: any) =>
       trade.pnl > 0 ? '#16a34a' : trade.pnl < 0 ? '#dc2626' : 'rgba(0,0,0,0)'
     );
@@ -330,7 +326,6 @@ export default function MarketEventComparisonPage() {
                   <div className="text-lg">{result.confidenceScore?.toFixed(2)}</div>
                 </div>
               </div>
-              {/* News headlines (optional) */}
               {includeNews && (
                 <div className="mt-6">
                   <div className="font-semibold mb-2">News Headlines (not implemented)</div>

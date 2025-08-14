@@ -70,7 +70,6 @@ export default function UnitPage() {
         score: showResults ? calculateScore() : undefined
       })
 
-      // Navigate back to module
       router.push(`/training/module/${unit.module?.id}`)
     } catch (error) {
       console.error('Error updating progress:', error)
@@ -78,15 +77,12 @@ export default function UnitPage() {
   }
 
   const calculateTokensEarned = () => {
-    // Base tokens for completing a unit
     let tokens = 10
 
-    // Bonus tokens for time spent (encourage engagement)
-    if (timeSpent > 300) { // 5 minutes
+    if (timeSpent > 300) {
       tokens += 5
     }
 
-    // Bonus tokens for quiz performance
     if (unit?.unitType === 'quiz' && showResults) {
       const score = calculateScore()
       if (score >= 90) tokens += 10
@@ -97,8 +93,7 @@ export default function UnitPage() {
   }
 
   const calculateScore = () => {
-    // This would be implemented based on the specific quiz content
-    return 85 // Placeholder
+    return 85
   }
 
   const renderContent = () => {

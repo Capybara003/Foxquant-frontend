@@ -29,7 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Initialize auth state from localStorage
   useEffect(() => {
     const initializeAuth = () => {
       try {
@@ -42,7 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        // Clear corrupted data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       } finally {
@@ -67,7 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Update localStorage and state atomically
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
@@ -76,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast.success('Login successful!');
       
-      // Use router for client-side navigation
       router.push('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
@@ -85,7 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const logout = useCallback(() => {
-    // Clear localStorage and state atomically
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
@@ -94,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     toast.success('Logged out successfully');
     
-    // Use router for client-side navigation
     router.push('/login');
   }, [router]);
 
@@ -116,7 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     user,
     token,

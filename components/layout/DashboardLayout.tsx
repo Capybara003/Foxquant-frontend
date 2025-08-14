@@ -55,7 +55,6 @@ const DashboardLayout = memo(({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={handleSidebarClose} />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
@@ -114,7 +113,6 @@ const DashboardLayout = memo(({ children }: DashboardLayoutProps) => {
         </div>
       </div>
 
-      {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
           <div className="flex h-16 items-center px-4 gap-3">
@@ -163,9 +161,7 @@ const DashboardLayout = memo(({ children }: DashboardLayoutProps) => {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="lg:pl-64">
-        {/* Mobile header */}
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:hidden">
           <button
             type="button"

@@ -25,17 +25,16 @@ const strategies = [
 ];
 
 const COLORS = [
-  '#2563eb', // blue
-  '#f59e42', // orange
-  '#16a34a', // green
-  '#dc2626', // red
-  '#a21caf', // purple
-  '#eab308', // yellow
-  '#0ea5e9', // sky
-  '#f43f5e', // pink
+  '#2563eb', 
+  '#f59e42',
+  '#16a34a',
+  '#dc2626',
+  '#a21caf',
+  '#eab308',
+  '#0ea5e9',
+  '#f43f5e',
 ];
 
-// Custom marker shapes for Chart.js
 const triangleUp = (ctx: any, size: number) => {
   const { x, y } = ctx;
   ctx.ctx.save();
@@ -66,16 +65,14 @@ export default function PortfolioReplayPage() {
   const [to, setTo] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [replays, setReplays] = useState<any>({}); // { symbol: { replay, error } }
+  const [replays, setReplays] = useState<any>({});
   const [globalStep, setGlobalStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [popover, setPopover] = useState<{ x: number; y: number; content: string } | null>(null);
   const playRef = useRef<any>(null);
 
-  // Dummy: Replace with real auth token logic
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
 
-  // Start replay for all symbols
   const handleStartReplay = async () => {
     setLoading(true);
     setError('');
@@ -102,7 +99,6 @@ export default function PortfolioReplayPage() {
     }
   };
 
-  // Stepper controls (global)
   const handleStep = (dir: number) => {
     if (!Object.keys(replays).length) return;
     const maxSteps = Math.max(...Object.values(replays).map((r: any) => r.replay?.steps?.length || 1));
@@ -127,7 +123,6 @@ export default function PortfolioReplayPage() {
     return () => clearTimeout(playRef.current);
   }, [playing, globalStep, replays]);
 
-  // Chart data for overlays
   const getOverlayChartData = () => {
     const datasets: any[] = [];
     const allDates: string[] = [];
@@ -140,21 +135,18 @@ export default function PortfolioReplayPage() {
     Object.entries(replays).forEach(([symbol, { replay }]: any, idx) => {
       if (!replay) return;
       const steps = replay.steps.slice(0, globalStep + 1);
-      // Map steps to allDates (fill with last equity if missing)
       let lastEquity = steps.length ? steps[0].equity : 1;
       const equitySeries = allDates.map(date => {
         const found = steps.find((s: any) => s.date === date);
         if (found) lastEquity = found.equity;
         return lastEquity;
       });
-      // Trade markers and annotation arrays
       const pointStyles = steps.map((s: any) =>
         s.action === 'buy' ? triangleUp : s.action === 'sell' ? triangleDown : 'circle'
       );
       const pointColors = steps.map((s: any) =>
         s.action === 'buy' ? '#16a34a' : s.action === 'sell' ? '#dc2626' : COLORS[idx % COLORS.length]
       );
-      // Entry/exit lines: collect indices for buy/sell
       const entryIndices = steps.map((s: any, i: number) => s.action === 'buy' ? i : -1).filter((i: number) => i !== -1);
       const exitIndices = steps.map((s: any, i: number) => s.action === 'sell' ? i : -1).filter((i: number) => i !== -1);
       datasets.push({
@@ -175,7 +167,6 @@ export default function PortfolioReplayPage() {
     return { labels: allDates, datasets };
   };
 
-  // CSV export handler (all symbols)
   const handleExportCSV = () => {
     const allRows: any[] = [];
     Object.entries(replays).forEach(([symbol, { replay }]: any) => {
@@ -202,7 +193,6 @@ export default function PortfolioReplayPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Advanced trade annotation popover
   const handleChartClick = (elements: any[], event: any) => {
     if (!elements.length) {
       setPopover(null);
@@ -224,7 +214,6 @@ export default function PortfolioReplayPage() {
     }
   };
 
-  // Chart options with entry/exit lines and tooltips
   const overlayChartOptions = {
     responsive: true,
     plugins: {
@@ -245,7 +234,7 @@ export default function PortfolioReplayPage() {
           },
         },
       },
-      annotation: false, // We'll draw lines manually
+      annotation: false,
     },
     onClick: (event: any, elements: any[], chart: any) => handleChartClick(elements, event),
     scales: {
@@ -254,7 +243,6 @@ export default function PortfolioReplayPage() {
     },
   };
 
-  // Draw entry/exit lines using plugin
   const chartRef = useRef<any>(null);
   React.useEffect(() => {
     if (!chartRef.current) return;
@@ -285,7 +273,6 @@ export default function PortfolioReplayPage() {
     ctx.restore();
   }, [replays, globalStep]);
 
-  // Summary stats for all symbols
   const summaryStats = Object.entries(replays).map(([symbol, { replay }]: any) =>
     replay ? (
       <div key={symbol} className="mb-2">

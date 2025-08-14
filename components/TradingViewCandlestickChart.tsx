@@ -20,7 +20,6 @@ interface Candlestick {
 interface TradingViewCandlestickChartProps {
   data: Candlestick[];
   height?: number;
-  // Remove width prop for responsiveness
 }
 
 const chartOptions = {
@@ -66,7 +65,6 @@ const TradingViewCandlestickChart: React.FC<TradingViewCandlestickChartProps> = 
     candleSeries.setData(data as CandlestickData[]);
     chart.timeScale().fitContent();
 
-    // Responsive width with ResizeObserver
     const resizeObserver = new ResizeObserver(entries => {
       for (let entry of entries) {
         if (entry.target === container) {

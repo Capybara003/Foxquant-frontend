@@ -28,19 +28,16 @@ export default function DashboardPage() {
   const router = useRouter()
   const { handleAuthError } = useAuthError()
 
-  // Order logs state
   const [orderLogs, setOrderLogs] = useState<any[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState('');
   const [filter, setFilter] = useState('');
-  // Add expanded row state for audit trail
   const [expandedRows, setExpandedRows] = useState<{ [id: string]: boolean }>({});
   const [portfolio, setPortfolio] = useState<any>(null)
   const [portfolioLoading, setPortfolioLoading] = useState(true)
   const [positions, setPositions] = useState<Position[]>([])
   const [positionsLoading, setPositionsLoading] = useState(true)
 
-  // Combined useEffect for authentication and data loading
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login')
@@ -48,17 +45,14 @@ export default function DashboardPage() {
     }
 
     if (user && !portfolio && !orderLogs.length) {
-      // Only load data if user is available and data hasn't been loaded yet
       const loadData = async () => {
         try {
-          // Load all data in parallel
           const [portfolioData, positionsData, logsData] = await Promise.allSettled([
             portfolioAPI.getPortfolio(),
             portfolioAPI.getPositions(),
             fetchOrderLogs(localStorage.getItem('token') || '')
           ]);
 
-          // Handle portfolio data
           if (portfolioData.status === 'fulfilled') {
             setPortfolio(portfolioData.value);
           } else {
@@ -66,7 +60,6 @@ export default function DashboardPage() {
             setPortfolio(null);
           }
 
-          // Handle positions data
           if (positionsData.status === 'fulfilled') {
             setPositions(Array.isArray(positionsData.value) ? positionsData.value : []);
           } else {
@@ -74,7 +67,6 @@ export default function DashboardPage() {
             setPositions([]);
           }
 
-          // Handle order logs data
           if (logsData.status === 'fulfilled') {
             setOrderLogs(Array.isArray(logsData.value) ? logsData.value : []);
           } else {
@@ -83,7 +75,6 @@ export default function DashboardPage() {
           }
         } catch (error: any) {
           console.error('Error loading dashboard data:', error);
-          // Handle authentication errors
           if (handleAuthError(error)) {
             return;
           }
@@ -98,16 +89,13 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router, portfolio, orderLogs.length, handleAuthError]);
 
-  // Get recent orders (last 3 filled orders)
   const recentOrders = orderLogs
     .filter(log => log.status === 'filled')
     .sort((a, b) => new Date(b.filled_at || b.submitted_at).getTime() - new Date(a.filled_at || a.submitted_at).getTime())
     .slice(0, 3);
 
-  // Get total trades count
   const totalTrades = orderLogs.filter(log => log.status === 'filled').length;
 
-  // CSV export handler
   const handleExportCSV = () => {
     const filtered = orderLogs.filter(log =>
       !filter ||
@@ -151,13 +139,11 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">        
-        {/* Welcome Section */}
         <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">Welcome back, {user.name}!</h1>
           <p className="text-primary-100">Here's your trading overview for today</p>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <div className="flex flex-wrap items-center">
@@ -216,7 +202,6 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card title="Recent Orders" subtitle="Your latest trading activity">
             <div className="space-y-4">
@@ -277,7 +262,6 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Order Logs/Audit Trail Section */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">Order Logs & Audit Trail
             <span className="text-gray-400 group relative cursor-pointer">

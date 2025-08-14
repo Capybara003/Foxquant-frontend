@@ -103,7 +103,6 @@ export default function TrainingPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Learning Modules</h1>
@@ -129,7 +128,6 @@ export default function TrainingPage() {
           </div>
         </div>
 
-        {/* Progress Summary */}
         {progress && (
           <Card className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -166,7 +164,6 @@ export default function TrainingPage() {
           </Card>
         )}
 
-        {/* Recent Achievements */}
         {progress && progress.recentAchievements.length > 0 && (
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Achievements</h3>
@@ -186,7 +183,6 @@ export default function TrainingPage() {
           </Card>
         )}
 
-        {/* Modules Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {modules.map((module) => (
             <Card key={module.id} className="p-6 hover:shadow-lg transition-shadow">
@@ -205,7 +201,6 @@ export default function TrainingPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{module.title}</h3>
               <p className="text-gray-600 text-sm mb-4">{module.description}</p>
 
-              {/* Progress Bar */}
               <div className="mb-4">
                 <div className="flex justify-between text-sm text-gray-500 mb-1">
                   <span>Progress</span>
@@ -219,7 +214,6 @@ export default function TrainingPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex space-x-2">
                 {module.isUnlocked ? (
                   <>
@@ -252,7 +246,6 @@ export default function TrainingPage() {
           ))}
         </div>
 
-        {/* Phase Information */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Learning Phases</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -274,7 +267,6 @@ export default function TrainingPage() {
           </div>
         </Card>
 
-        {/* Gamification Panel */}
         {showGamification && (
           <GamificationPanel onClose={() => setShowGamification(false)} />
         )}

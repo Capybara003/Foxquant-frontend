@@ -44,7 +44,6 @@ interface PortfolioData {
   transfers_blocked: boolean;
   account_blocked: boolean;
   created_at: string;
-  // ...other Alpaca fields as needed
 }
 
 interface Position {
@@ -56,7 +55,6 @@ interface Position {
   unrealized_pl: string;
   unrealized_plpc: string;
   side: string;
-  // ...other Alpaca position fields as needed
 }
 
 export default function PortfolioPage() {
@@ -211,7 +209,6 @@ export default function PortfolioPage() {
             Place Order
           </Button>
         </div>
-        {/* News */}
         <Card title="Latest News" subtitle={`Top headlines for ${marketSymbol}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {newsLoading ? (
@@ -228,7 +225,6 @@ export default function PortfolioPage() {
                   key={index}
                   className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-100 flex flex-col h-full overflow-hidden group"
                 >
-                  {/* Image if available */}
                   {item.image_url ? (
                     <img
                       src={item.image_url}
@@ -266,14 +262,12 @@ export default function PortfolioPage() {
             )}
           </div>
         </Card>
-        {/* Warning for Alpaca 403 error */}
         {marketError && marketError.includes('Alpaca API access forbidden') && (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
             <strong>Warning:</strong> {marketError}
           </div>
         )}
 
-        {/* Portfolio Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <div className="flex items-center justify-center flex-wrap w-full">
@@ -318,7 +312,6 @@ export default function PortfolioPage() {
           </Card>
         </div>
 
-        {/* Holdings */}
         <Card title="Current Holdings" subtitle="Your active positions">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -364,7 +357,6 @@ export default function PortfolioPage() {
           </div>
         </Card>
 
-        {/* Performance Chart */}
         <Card title="Portfolio Performance" subtitle="Performance over time">
           <div className="mb-4 flex gap-2 justify-between items-center">
             <div>
@@ -471,7 +463,6 @@ export default function PortfolioPage() {
           </div>
         </Card>
 
-        {/* Market Data */}
         <Card title="Market Data" subtitle="Real-time quote and price chart">
           <div className="mb-4 flex gap-2 items-end">
             <input type="text" value={marketSymbol} onChange={e => setMarketSymbol(e.target.value.toUpperCase())} className="border rounded px-2 py-1" placeholder="Symbol (e.g. AAPL)" style={{ width: 120 }} />
