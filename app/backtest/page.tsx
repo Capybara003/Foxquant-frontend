@@ -6,13 +6,8 @@ import { backtestAPI } from '@/services/api';
 import { marketAPI } from '@/services/api';
 import Select from 'react-select';
 import ChartWrapper from '@/components/ChartWrapper';
-
-const strategies = [
-  { label: 'Basic Momentum', value: 'basicMomentum' },
-  { label: 'Advanced Momentum', value: 'advancedMomentum' },
-  { label: 'Mean Reversion ML', value: 'meanReversionML' },
-  { label: 'Volatility Breakout', value: 'volatilityBreakout' },
-];
+import StrategyParameterForm from '@/components/StrategyParameterForm';
+import { getStrategyConfig, getDefaultParams } from './strategyConfig';
 
 export default function BacktestPage() {
   const [strategy, setStrategy] = useState('basicMomentum');
@@ -22,11 +17,19 @@ export default function BacktestPage() {
   const [interval, setInterval] = useState('1D');
   const [startDate, setStartDate] = useState('2023-01-01');
   const [endDate, setEndDate] = useState('2023-12-31');
-  const [window, setWindow] = useState(14);
+  const [params, setParams] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const [symbolOption, setSymbolOption] = useState<{ value: string; label: string; exchange: string } | null>(null);
+
+  // Get strategy configurations
+  const strategies = [
+    { label: 'Basic Momentum', value: 'basicMomentum' },
+    { label: 'Advanced Momentum', value: 'advancedMomentum' },
+    { label: 'Mean Reversion ML', value: 'meanReversionML' },
+    { label: 'Volatility Breakout', value: 'volatilityBreakout' },
+  ];
 
   useEffect(() => {
     setLoading(true);
@@ -51,6 +54,12 @@ export default function BacktestPage() {
     setExchange(option ? option.exchange : '');
   };
 
+  // Update params when strategy changes
+  useEffect(() => {
+    const defaultParams = getDefaultParams(strategy);
+    setParams(defaultParams);
+  }, [strategy]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,7 +71,7 @@ export default function BacktestPage() {
         from: startDate,
         to: endDate,
         strategy,
-        params: { window },
+        params,
       });
       setResult(data);
     } catch (e: any) {
@@ -101,37 +110,38 @@ export default function BacktestPage() {
                   required
                 />
               </div>
-              <div className="w-full">
+              <div className="w-full flex justify-between items-center gap-6">
+              <div className="w-full flex-1 gap-3 items-center">
                 <label className="block text-sm font-medium mb-1">Start Date</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                   required
                 />
               </div>
-              <div className="w-full">
+              <div className="w-full flex-1 gap-3 items-center">
                 <label className="block text-sm font-medium mb-1">End Date</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                   required
                 />
               </div>
-              <div className="w-full">
-                <label className="block text-sm font-medium mb-1">Window Size</label>
-                <input
-                  type="number"
-                  value={window}
-                  min={1}
-                  onChange={e => setWindow(Number(e.target.value))}
-                  className="w-full border rounded p-2"
-                  required
-                />
               </div>
+              {/* Dynamic Strategy Parameters */}
+              {getStrategyConfig(strategy) && (
+                <div className="w-full">
+                  <StrategyParameterForm
+                    strategyConfig={getStrategyConfig(strategy)!}
+                    params={params}
+                    onParamsChange={setParams}
+                  />
+                </div>
+              )}
               <button
                 type="submit"
                 className="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition"
