@@ -1,123 +1,229 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import Card from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { ArrowLeft, Check, X, RotateCcw, Star, BookOpen } from 'lucide-react'
-import { trainingAPI } from '@/services/api'
+import { useState, useEffect } from "react";
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  useSensors,
+  useSensor,
+  PointerSensor,
+  TouchSensor,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import { useParams, useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import { ArrowLeft, Check, X, RotateCcw, Star, BookOpen } from "lucide-react";
+import { trainingAPI } from "@/services/api";
 
 interface UnitContent {
-  id: string
-  title: string
-  content: string
-  unitType: string
-  progress: any
+  id: string;
+  title: string;
+  content: string;
+  unitType: string;
+  progress: any;
   module?: {
-    id: string
-    title: string
-  }
+    id: string;
+    title: string;
+  };
 }
 
 export default function UnitPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [unit, setUnit] = useState<UnitContent | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [userAnswers, setUserAnswers] = useState<any>({})
-  const [showResults, setShowResults] = useState(false)
-  const [timeSpent, setTimeSpent] = useState(0)
-  const [startTime] = useState(Date.now())
+  const params = useParams();
+  const router = useRouter();
+  const [unit, setUnit] = useState<UnitContent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<any>({});
+  const [showResults, setShowResults] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [startTime] = useState(Date.now());
+  // Matching specific state: term index -> definition index mapping
+  const [matchingAssignments, setMatchingAssignments] = useState<
+    Record<number, number | null>
+  >({});
+  const [draggingDefIndex, setDraggingDefIndex] = useState<number | null>(null);
+  const [selectedDefIndex, setSelectedDefIndex] = useState<number | null>(null);
+
+  // Initialize matching slots when a matching unit loads
+  useEffect(() => {
+    if (!unit) return;
+    if (unit.unitType !== "matching") return;
+    try {
+      const content = JSON.parse(unit.content);
+      if (Array.isArray(content?.terms)) {
+        const init: Record<number, number | null> = {};
+        content.terms.forEach((_t: any, idx: number) => {
+          if (matchingAssignments[idx] === undefined) init[idx] = null;
+        });
+        if (Object.keys(init).length)
+          setMatchingAssignments({ ...matchingAssignments, ...init });
+      }
+    } catch {}
+  }, [unit]);
 
   useEffect(() => {
     if (params.unitId) {
-      fetchUnit(params.unitId as string)
+      fetchUnit(params.unitId as string);
     }
-  }, [params.unitId])
+  }, [params.unitId]);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeSpent(Math.floor((Date.now() - startTime) / 1000))
-    }, 1000)
+      setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [startTime])
+    return () => clearInterval(timer);
+  }, [startTime]);
 
   const fetchUnit = async (unitId: string) => {
     try {
-      const data = await trainingAPI.getUnit(unitId)
-      setUnit(data)
+      const data = await trainingAPI.getUnit(unitId);
+      setUnit(data);
     } catch (error) {
-      console.error('Error fetching unit:', error)
+      console.error("Error fetching unit:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleComplete = async () => {
-    if (!unit) return
+    if (!unit) return;
 
     try {
-      const tokensEarned = calculateTokensEarned()
-      
+      const tokensEarned = calculateTokensEarned();
+
       await trainingAPI.updateUnitProgress(unit.id, {
         completed: true,
         timeSpent,
         tokensEarned,
-        score: showResults ? calculateScore() : undefined
-      })
+        score: requiresSubmission(unit.unitType) ? calculateScore() : undefined,
+      });
 
-      router.push(`/training/module/${unit.module?.id}`)
+      router.push(`/training/module/${unit.module?.id}`);
     } catch (error) {
-      console.error('Error updating progress:', error)
+      console.error("Error updating progress:", error);
     }
-  }
+  };
 
   const calculateTokensEarned = () => {
-    let tokens = 10
+    let tokens = 10;
 
     if (timeSpent > 300) {
-      tokens += 5
+      tokens += 5;
     }
 
-    if (unit?.unitType === 'quiz' && showResults) {
-      const score = calculateScore()
-      if (score >= 90) tokens += 10
-      else if (score >= 80) tokens += 5
+    if (requiresSubmission(unit?.unitType || "") && showResults) {
+      const score = calculateScore();
+      if (score >= 90) tokens += 10;
+      else if (score >= 80) tokens += 5;
     }
 
-    return tokens
-  }
+    return tokens;
+  };
 
   const calculateScore = () => {
-    return 85
-  }
+    if (!unit) return 0;
+    const content = JSON.parse(unit.content);
+    if (unit.unitType === "quiz") {
+      const total = content.questions.length;
+      const correct = content.questions.reduce(
+        (acc: number, q: any, idx: number) => {
+          return acc + (userAnswers[idx] === q.correctAnswer ? 1 : 0);
+        },
+        0
+      );
+      return Math.round((correct / total) * 100);
+    }
+    if (unit.unitType === "fill_blank") {
+      const total = content.questions.length;
+      const normalize = (s: string) =>
+        (s || "").toString().trim().toLowerCase();
+      const correct = content.questions.reduce(
+        (acc: number, q: any, idx: number) => {
+          return (
+            acc + (normalize(userAnswers[idx]) === normalize(q.answer) ? 1 : 0)
+          );
+        },
+        0
+      );
+      return Math.round((correct / total) * 100);
+    }
+    if (unit.unitType === "matching") {
+      const total = content.terms.length;
+      const correct = content.terms.reduce(
+        (acc: number, _t: any, idx: number) => {
+          return acc + (matchingAssignments[idx] === idx ? 1 : 0);
+        },
+        0
+      );
+      return Math.round((correct / total) * 100);
+    }
+    return 0;
+  };
+
+  const allAnswered = () => {
+    if (!unit) return false;
+    const content = JSON.parse(unit.content);
+    if (unit.unitType === "quiz") {
+      return content.questions.every(
+        (_q: any, idx: number) => userAnswers[idx] !== undefined
+      );
+    }
+    if (unit.unitType === "fill_blank") {
+      return content.questions.every(
+        (_q: any, idx: number) =>
+          (userAnswers[idx] || "").toString().trim().length > 0
+      );
+    }
+    if (unit.unitType === "matching") {
+      return content.terms.every(
+        (_t: any, idx: number) =>
+          matchingAssignments[idx] !== undefined &&
+          matchingAssignments[idx] !== null
+      );
+    }
+    return true;
+  };
+
+  const requiresSubmission = (type: string) =>
+    ["quiz", "fill_blank", "matching"].includes(type);
+
+  const handleSubmit = () => {
+    if (!unit) return;
+    if (!allAnswered()) return;
+    setIsSubmitting(true);
+    setShowResults(true);
+    // small timeout to allow UI state change; not required for backend
+    setTimeout(() => setIsSubmitting(false), 150);
+  };
 
   const renderContent = () => {
-    if (!unit) return null
+    if (!unit) return null;
 
-    const content = JSON.parse(unit.content)
+    const content = JSON.parse(unit.content);
 
     switch (unit.unitType) {
-      case 'definition':
-        return renderDefinition(content)
-      case 'example':
-        return renderExample(content)
-      case 'fill_blank':
-        return renderFillBlank(content)
-      case 'matching':
-        return renderMatching(content)
-      case 'flashcard':
-        return renderFlashcard(content)
-      case 'quiz':
-        return renderQuiz(content)
+      case "definition":
+        return renderDefinition(content);
+      case "example":
+        return renderExample(content);
+      case "fill_blank":
+        return renderFillBlank(content);
+      case "matching":
+        return renderMatching(content);
+      case "flashcard":
+        return renderFlashcard(content);
+      case "quiz":
+        return renderQuiz(content);
       default:
-        return renderDefault(content)
+        return renderDefault(content);
     }
-  }
+  };
 
   const renderDefinition = (content: any) => (
     <div className="space-y-4">
@@ -132,12 +238,14 @@ export default function UnitPage() {
         </div>
       )}
     </div>
-  )
+  );
 
   const renderExample = (content: any) => (
     <div className="space-y-4">
       <div className="bg-green-50 p-6 rounded-lg">
-        <h3 className="text-lg font-semibold text-green-900 mb-2">Real-World Example</h3>
+        <h3 className="text-lg font-semibold text-green-900 mb-2">
+          Real-World Example
+        </h3>
         <p className="text-green-800">{content.example}</p>
       </div>
       {content.keyPoints && (
@@ -151,74 +259,249 @@ export default function UnitPage() {
         </div>
       )}
     </div>
-  )
+  );
 
   const renderFillBlank = (content: any) => (
     <div className="space-y-4">
       <div className="bg-yellow-50 p-6 rounded-lg">
-        <h3 className="text-lg font-semibold text-yellow-900 mb-4">Fill in the Blanks</h3>
+        <h3 className="text-lg font-semibold text-yellow-900 mb-4">
+          Fill in the Blanks
+        </h3>
         <div className="space-y-4">
           {content.questions.map((question: any, index: number) => (
             <div key={index} className="space-y-2">
-              <p className="text-yellow-800">{question.text}</p>
+              <p className="text-yellow-800 flex items-center justify-between">
+                <span>{question.text}</span>
+                {showResults && (
+                  <span
+                    className={
+                      (userAnswers[index] || "")
+                        .toString()
+                        .trim()
+                        .toLowerCase() ===
+                      (question.answer || "").toString().trim().toLowerCase()
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    {(userAnswers[index] || "")
+                      .toString()
+                      .trim()
+                      .toLowerCase() ===
+                    (question.answer || "").toString().trim().toLowerCase()
+                      ? "Correct"
+                      : `Answer: ${question.answer}`}
+                  </span>
+                )}
+              </p>
               <Input
                 placeholder="Your answer"
-                value={userAnswers[index] || ''}
-                onChange={(e) => setUserAnswers({ ...userAnswers, [index]: e.target.value })}
+                value={userAnswers[index] || ""}
+                onChange={(e) =>
+                  setUserAnswers({ ...userAnswers, [index]: e.target.value })
+                }
               />
             </div>
           ))}
         </div>
+        <div className="mt-4">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!allAnswered() || isSubmitting}
+          >
+            Submit Answers
+          </Button>
+        </div>
       </div>
     </div>
-  )
+  );
 
   const renderMatching = (content: any) => (
     <div className="space-y-4">
       <div className="bg-purple-50 p-6 rounded-lg">
-        <h3 className="text-lg font-semibold text-purple-900 mb-4">Matching Exercise</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-semibold text-purple-800 mb-2">Terms</h4>
-            <div className="space-y-2">
-              {content.terms.map((term: string, index: number) => (
-                <div key={index} className="p-2 bg-white rounded border">
-                  {index + 1}. {term}
-                </div>
-              ))}
+        <h3 className="text-lg font-semibold text-purple-900 mb-4">
+          Matching Exercise
+        </h3>
+        <p className="text-sm text-purple-800 mb-3">
+          Tip: Drag a definition onto a term on desktop. On mobile, tap a
+          definition to select it, then tap a term to assign.
+        </p>
+        <DndContext
+          sensors={useSensors(
+            useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+            useSensor(TouchSensor)
+          )}
+          onDragEnd={(event) => {
+            const { active, over } = event;
+            if (!active || !over) return;
+            const defMatch = String(active.id).match(/^def-(\d+)$/);
+            const termMatch = String(over.id).match(/^term-(\d+)$/);
+            if (!defMatch || !termMatch) return;
+            const defIndex = parseInt(defMatch[1], 10);
+            const termIndex = parseInt(termMatch[1], 10);
+            setMatchingAssignments({
+              ...matchingAssignments,
+              [termIndex]: defIndex,
+            });
+            setSelectedDefIndex(null);
+          }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-semibold text-purple-800 mb-2">Terms</h4>
+              <div className="space-y-2">
+                {content.terms.map((term: string, index: number) => (
+                  <DroppableTerm
+                    key={index}
+                    index={index}
+                    termLabel={`${index + 1}. ${term}`}
+                    assignedIndex={matchingAssignments[index]}
+                    showResults={showResults}
+                    onClick={() => {
+                      if (selectedDefIndex === null) return;
+                      setMatchingAssignments({
+                        ...matchingAssignments,
+                        [index]: selectedDefIndex,
+                      });
+                      setSelectedDefIndex(null);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-purple-800 mb-2">
+                Definitions
+              </h4>
+              <div className="space-y-2">
+                {content.definitions.map((def: string, index: number) => (
+                  <DraggableDef
+                    key={index}
+                    index={index}
+                    label={`${String.fromCharCode(65 + index)}. ${def}`}
+                    selected={selectedDefIndex === index}
+                    onClick={() =>
+                      setSelectedDefIndex(
+                        selectedDefIndex === index ? null : index
+                      )
+                    }
+                  />
+                ))}
+              </div>
             </div>
           </div>
-          <div>
-            <h4 className="font-semibold text-purple-800 mb-2">Definitions</h4>
-            <div className="space-y-2">
-              {content.definitions.map((def: string, index: number) => (
-                <div key={index} className="p-2 bg-white rounded border">
-                  {String.fromCharCode(65 + index)}. {def}
-                </div>
-              ))}
-            </div>
-          </div>
+        </DndContext>
+        <div className="mt-4">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!allAnswered() || isSubmitting}
+          >
+            Submit Matches
+          </Button>
+          {selectedDefIndex !== null && (
+            <span className="ml-3 text-sm text-purple-700">
+              Selected: {String.fromCharCode(65 + selectedDefIndex)}
+            </span>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
+
+  function DraggableDef({
+    index,
+    label,
+    selected,
+    onClick,
+  }: {
+    index: number;
+    label: string;
+    selected: boolean;
+    onClick: () => void;
+  }) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } =
+      useDraggable({ id: `def-${index}` });
+    const style: any = {
+      transform: CSS.Translate.toString(transform),
+      opacity: isDragging ? 0.8 : 1,
+      touchAction: "none",
+    };
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className={`p-2 bg-white rounded border cursor-move ${
+          selected ? "ring-2 ring-purple-400" : ""
+        }`}
+        onClick={onClick}
+      >
+        {label}
+      </div>
+    );
+  }
+
+  function DroppableTerm({
+    index,
+    termLabel,
+    assignedIndex,
+    showResults,
+    onClick,
+  }: {
+    index: number;
+    termLabel: string;
+    assignedIndex: number | null | undefined;
+    showResults: boolean;
+    onClick: () => void;
+  }) {
+    const { isOver, setNodeRef } = useDroppable({ id: `term-${index}` });
+    return (
+      <div
+        ref={setNodeRef}
+        className={`p-2 bg-white rounded border flex items-center justify-between ${
+          showResults
+            ? assignedIndex === index
+              ? "border-green-400"
+              : "border-red-400"
+            : isOver
+            ? "border-purple-400"
+            : ""
+        }`}
+        onClick={onClick}
+      >
+        <span>{termLabel}</span>
+        <span className="text-sm text-gray-500">
+          {assignedIndex !== undefined && assignedIndex !== null
+            ? String.fromCharCode(65 + (assignedIndex as number))
+            : "—"}
+        </span>
+      </div>
+    );
+  }
 
   const renderFlashcard = (content: any) => {
-    const [isFlipped, setIsFlipped] = useState(false)
-    
+    const [isFlipped, setIsFlipped] = useState(false);
+
     return (
       <div className="space-y-4">
         <div className="bg-orange-50 p-6 rounded-lg">
-          <h3 className="text-lg font-semibold text-orange-900 mb-4">Flashcard</h3>
+          <h3 className="text-lg font-semibold text-orange-900 mb-4">
+            Flashcard
+          </h3>
           <div className="relative">
-            <div 
+            <div
               className="bg-white p-8 rounded-lg shadow-lg cursor-pointer transform transition-transform duration-300"
-              style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+              style={{
+                transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+              }}
               onClick={() => setIsFlipped(!isFlipped)}
             >
               <div className="text-center">
                 <h4 className="text-xl font-semibold text-gray-900 mb-4">
-                  {isFlipped ? 'Answer' : 'Question'}
+                  {isFlipped ? "Answer" : "Question"}
                 </h4>
                 <p className="text-lg text-gray-700">
                   {isFlipped ? content.answer : content.question}
@@ -230,17 +513,17 @@ export default function UnitPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsFlipped(!isFlipped)}
-                className='flex items-center'
+                className="flex items-center"
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                {isFlipped ? 'Show Question' : 'Show Answer'}
+                {isFlipped ? "Show Question" : "Show Answer"}
               </Button>
             </div>
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   const renderQuiz = (content: any) => (
     <div className="space-y-4">
@@ -254,16 +537,29 @@ export default function UnitPage() {
               </p>
               <div className="space-y-2">
                 {question.options.map((option: string, optionIndex: number) => (
-                  <label key={optionIndex} className="flex items-center space-x-2 cursor-pointer">
+                  <label
+                    key={optionIndex}
+                    className={`flex items-center space-x-2 cursor-pointer ${
+                      showResults
+                        ? optionIndex === question.correctAnswer
+                          ? "text-green-700"
+                          : userAnswers[index] === optionIndex
+                          ? "text-red-700"
+                          : ""
+                        : ""
+                    }`}
+                  >
                     <input
                       type="radio"
                       name={`question-${index}`}
                       value={optionIndex}
                       checked={userAnswers[index] === optionIndex}
-                      onChange={(e) => setUserAnswers({ 
-                        ...userAnswers, 
-                        [index]: parseInt(e.target.value) 
-                      })}
+                      onChange={(e) =>
+                        setUserAnswers({
+                          ...userAnswers,
+                          [index]: parseInt(e.target.value),
+                        })
+                      }
                       className="text-primary-600"
                     />
                     <span className="text-gray-700">{option}</span>
@@ -276,14 +572,20 @@ export default function UnitPage() {
         <div className="mt-4">
           <Button
             variant="primary"
-            onClick={() => setShowResults(true)}
+            onClick={handleSubmit}
+            disabled={!allAnswered() || isSubmitting}
           >
             Submit Quiz
           </Button>
+          {showResults && (
+            <span className="ml-4 font-semibold text-gray-800">
+              Score: {calculateScore()}%
+            </span>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 
   const renderDefault = (content: any) => (
     <div className="space-y-4">
@@ -294,7 +596,7 @@ export default function UnitPage() {
         </div>
       </div>
     </div>
-  )
+  );
 
   if (loading) {
     return (
@@ -303,17 +605,19 @@ export default function UnitPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   if (!unit) {
     return (
       <DashboardLayout>
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Unit not found</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Unit not found
+          </h2>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -326,7 +630,7 @@ export default function UnitPage() {
               variant="outline"
               size="sm"
               onClick={() => router.back()}
-              className='flex items-center'
+              className="flex items-center"
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
@@ -347,23 +651,22 @@ export default function UnitPage() {
         </div>
 
         {/* Content */}
-        <Card className="p-6">
-          {renderContent()}
-        </Card>
+        <Card className="p-6">{renderContent()}</Card>
 
         {/* Action Buttons */}
         <div className="flex justify-between">
           <Button
             variant="outline"
             onClick={() => router.back()}
-            className='flex justify-center items-center'
+            className="flex justify-center items-center"
           >
             Back to Module
           </Button>
           <Button
             variant="primary"
             onClick={handleComplete}
-            className='flex justify-center items-center'
+            disabled={requiresSubmission(unit.unitType) && !showResults}
+            className="flex justify-center items-center"
           >
             <Check className="h-4 w-4 mr-1" />
             Complete Unit
@@ -371,5 +674,5 @@ export default function UnitPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
-} 
+  );
+}

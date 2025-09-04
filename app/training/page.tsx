@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -38,7 +39,7 @@ export default function TrainingPage() {
   const [progress, setProgress] = useState<UserProgress | null>(null)
   const [loading, setLoading] = useState(true)
   const [showGamification, setShowGamification] = useState(false)
-
+  const router = useRouter()
   useEffect(() => {
     fetchModules()
     fetchProgress()
@@ -221,7 +222,7 @@ export default function TrainingPage() {
                       variant="primary" 
                       size="sm" 
                       className="flex-1 flex items-center justify-center"
-                      onClick={() => window.location.href = `/training/module/${module.id}`}
+                      onClick={() => router.push(`/training/module/${module.id}`)}
                     >
                       <Play className="h-4 w-4 mr-1" />
                       {module.progress > 0 ? 'Continue' : 'Start'}
