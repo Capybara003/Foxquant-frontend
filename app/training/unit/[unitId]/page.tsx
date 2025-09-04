@@ -48,6 +48,10 @@ export default function UnitPage() {
   >({});
   const [draggingDefIndex, setDraggingDefIndex] = useState<number | null>(null);
   const [selectedDefIndex, setSelectedDefIndex] = useState<number | null>(null);
+  const [shuffledDefinitions, setShuffledDefinitions] = useState<string[]>([]);
+  const [definitionMapping, setDefinitionMapping] = useState<
+    Record<number, number>
+  >({});
   // DnD sensors must be declared at the top level to preserve hook order
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -60,13 +64,30 @@ export default function UnitPage() {
     if (unit.unitType !== "matching") return;
     try {
       const content = JSON.parse(unit.content);
-      if (Array.isArray(content?.terms)) {
+      if (
+        Array.isArray(content?.terms) &&
+        Array.isArray(content?.definitions)
+      ) {
         const init: Record<number, number | null> = {};
         content.terms.forEach((_t: any, idx: number) => {
           if (matchingAssignments[idx] === undefined) init[idx] = null;
         });
         if (Object.keys(init).length)
           setMatchingAssignments({ ...matchingAssignments, ...init });
+
+        // Shuffle definitions and create mapping
+        const shuffled = [...content.definitions].sort(
+          () => Math.random() - 0.5
+        );
+        setShuffledDefinitions(shuffled);
+
+        // Create mapping from shuffled index to original index
+        const mapping: Record<number, number> = {};
+        shuffled.forEach((shuffledDef, shuffledIndex) => {
+          const originalIndex = content.definitions.indexOf(shuffledDef);
+          mapping[shuffledIndex] = originalIndex;
+        });
+        setDefinitionMapping(mapping);
       }
     } catch {}
   }, [unit]);
@@ -162,7 +183,16 @@ export default function UnitPage() {
       const total = content.terms.length;
       const correct = content.terms.reduce(
         (acc: number, _t: any, idx: number) => {
-          return acc + (matchingAssignments[idx] === idx ? 1 : 0);
+          // Check if the assigned definition (shuffled index) maps to the correct original index
+          const assignedShuffledIndex = matchingAssignments[idx];
+          if (
+            assignedShuffledIndex === null ||
+            assignedShuffledIndex === undefined
+          )
+            return acc;
+          const originalDefinitionIndex =
+            definitionMapping[assignedShuffledIndex];
+          return acc + (originalDefinitionIndex === idx ? 1 : 0);
         },
         0
       );
@@ -328,6 +358,10 @@ export default function UnitPage() {
         <h3 className="text-lg font-semibold text-purple-900 mb-4">
           Matching Exercise
         </h3>
+        <p className="text-purple-700 mb-4">
+          Drag the definitions from the pool below to match with the terms on
+          the left.
+        </p>
         <DndContext
           sensors={sensors}
           onDragEnd={(event) => {
@@ -345,10 +379,11 @@ export default function UnitPage() {
             setSelectedDefIndex(null);
           }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Terms Column */}
             <div>
-              <h4 className="font-semibold text-purple-800 mb-2">Terms</h4>
-              <div className="space-y-2">
+              <h4 className="font-semibold text-purple-800 mb-3">Terms</h4>
+              <div className="space-y-3">
                 {content.terms.map((term: string, index: number) => (
                   <DroppableTerm
                     key={index}
@@ -356,6 +391,8 @@ export default function UnitPage() {
                     termLabel={`${index + 1}. ${term}`}
                     assignedIndex={matchingAssignments[index]}
                     showResults={showResults}
+                    definitionMapping={definitionMapping}
+                    shuffledDefinitions={shuffledDefinitions}
                     onClick={() => {
                       if (selectedDefIndex === null) return;
                       setMatchingAssignments({
@@ -368,12 +405,14 @@ export default function UnitPage() {
                 ))}
               </div>
             </div>
+
+            {/* Definitions Pool */}
             <div>
-              <h4 className="font-semibold text-purple-800 mb-2">
-                Definitions
+              <h4 className="font-semibold text-purple-800 mb-3">
+                Definitions Pool
               </h4>
-              <div className="space-y-2">
-                {content.definitions.map((def: string, index: number) => (
+              <div className="grid grid-cols-1 gap-2">
+                {shuffledDefinitions.map((def: string, index: number) => (
                   <DraggableDef
                     key={index}
                     index={index}
@@ -390,7 +429,7 @@ export default function UnitPage() {
             </div>
           </div>
         </DndContext>
-        <div className="mt-4">
+        <div className="mt-6">
           <Button
             variant="primary"
             onClick={handleSubmit}
@@ -447,35 +486,66 @@ export default function UnitPage() {
     termLabel,
     assignedIndex,
     showResults,
+    definitionMapping,
+    shuffledDefinitions,
     onClick,
   }: {
     index: number;
     termLabel: string;
     assignedIndex: number | null | undefined;
     showResults: boolean;
+    definitionMapping: Record<number, number>;
+    shuffledDefinitions: string[];
     onClick: () => void;
   }) {
     const { isOver, setNodeRef } = useDroppable({ id: `term-${index}` });
+
+    // Get the assigned definition text if there's an assignment
+    const assignedDefinition =
+      assignedIndex !== null && assignedIndex !== undefined
+        ? shuffledDefinitions[assignedIndex]
+        : null;
+
+    // Check if the assignment is correct
+    const isCorrect =
+      showResults && assignedIndex !== null && assignedIndex !== undefined
+        ? definitionMapping[assignedIndex] === index
+        : null;
+
     return (
       <div
         ref={setNodeRef}
-        className={`p-2 bg-white rounded border flex items-center justify-between ${
+        className={`p-3 bg-white rounded-lg border-2 transition-colors ${
           showResults
-            ? assignedIndex === index
-              ? "border-green-400"
-              : "border-red-400"
+            ? isCorrect
+              ? "border-green-400 bg-green-50"
+              : "border-red-400 bg-red-50"
             : isOver
-            ? "border-purple-400"
-            : ""
+            ? "border-purple-400 bg-purple-50"
+            : "border-gray-200 hover:border-purple-300"
         }`}
         onClick={onClick}
       >
-        <span>{termLabel}</span>
-        <span className="text-sm text-gray-500">
-          {assignedIndex !== undefined && assignedIndex !== null
-            ? String.fromCharCode(65 + (assignedIndex as number))
-            : "—"}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-gray-900">{termLabel}</span>
+          <span className="text-sm text-gray-500">
+            {assignedIndex !== undefined && assignedIndex !== null
+              ? String.fromCharCode(65 + (assignedIndex as number))
+              : "—"}
+          </span>
+        </div>
+        {assignedDefinition && (
+          <div className="mt-2 text-sm text-gray-600">{assignedDefinition}</div>
+        )}
+        {showResults && isCorrect !== null && (
+          <div className="mt-2 text-xs font-medium">
+            {isCorrect ? (
+              <span className="text-green-600">✓ Correct</span>
+            ) : (
+              <span className="text-red-600">✗ Incorrect</span>
+            )}
+          </div>
+        )}
       </div>
     );
   }
