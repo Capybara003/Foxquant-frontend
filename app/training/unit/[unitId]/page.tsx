@@ -48,6 +48,11 @@ export default function UnitPage() {
   >({});
   const [draggingDefIndex, setDraggingDefIndex] = useState<number | null>(null);
   const [selectedDefIndex, setSelectedDefIndex] = useState<number | null>(null);
+  // DnD sensors must be declared at the top level to preserve hook order
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor)
+  );
 
   // Initialize matching slots when a matching unit loads
   useEffect(() => {
@@ -217,7 +222,7 @@ export default function UnitPage() {
       case "matching":
         return renderMatching(content);
       case "flashcard":
-        return renderFlashcard(content);
+        return <FlashcardContent content={content} />;
       case "quiz":
         return renderQuiz(content);
       default:
@@ -323,15 +328,8 @@ export default function UnitPage() {
         <h3 className="text-lg font-semibold text-purple-900 mb-4">
           Matching Exercise
         </h3>
-        <p className="text-sm text-purple-800 mb-3">
-          Tip: Drag a definition onto a term on desktop. On mobile, tap a
-          definition to select it, then tap a term to assign.
-        </p>
         <DndContext
-          sensors={useSensors(
-            useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-            useSensor(TouchSensor)
-          )}
+          sensors={sensors}
           onDragEnd={(event) => {
             const { active, over } = event;
             if (!active || !over) return;
@@ -482,14 +480,14 @@ export default function UnitPage() {
     );
   }
 
-  const renderFlashcard = (content: any) => {
+  function FlashcardContent({ content }: { content: any }) {
     const [isFlipped, setIsFlipped] = useState(false);
 
     return (
       <div className="space-y-4">
         <div className="bg-orange-50 p-6 rounded-lg">
           <h3 className="text-lg font-semibold text-orange-900 mb-4">
-            Flashcard
+            \ Flashcard
           </h3>
           <div className="relative">
             <div
@@ -523,7 +521,7 @@ export default function UnitPage() {
         </div>
       </div>
     );
-  };
+  }
 
   const renderQuiz = (content: any) => (
     <div className="space-y-4">
